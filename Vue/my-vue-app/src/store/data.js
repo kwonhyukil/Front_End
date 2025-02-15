@@ -3,66 +3,76 @@ import { onMounted } from "vue";
 
 export const useDataStore = defineStore("data", {
   state: () => ({
-    count: 0,
-    subjects: [], // 초기 빈 배열
+    subjects: JSON.parse(localStorage.getItem("subjects")) || [], // ✅ 항상 배열 유지
   }),
+
+  getters: {
+    // 🔥 ✅ "완료되지 않은" 항목 개수만 카운트
+    count: (state) => state.subjects.filter((subject) => !subject.checked).length,
+  },
+
   actions: {
-    // ✅ localStorage 업데이트 함수
+    // ✅ LocalStorage 업데이트 함수
     saveToLocalStorage() {
       localStorage.setItem("subjects", JSON.stringify(this.subjects));
     },
 
-    // ✅ 초기 데이터 로드 (새로고침 시 데이터 유지)
+    // ✅ LocalStorage에서 초기 데이터 로드 (예외 처리 포함)
     loadFromLocalStorage() {
-      const savedData = localStorage.getItem("subjects");
-      if (savedData) {
-        this.subjects = JSON.parse(savedData);
-      }
-    },
+      try {
+        const savedData = localStorage.getItem("subjects");
+        if (savedData) {
+          const parsedData = JSON.parse(savedData);
 
-    increment() {
-      this.count++;
-      this.saveToLocalStorage();
-    },
-    decrement() {
-      this.count--;
-      this.saveToLocalStorage();
-    },
-
-    // 📌 할 일 추가
-    addSubject(text) {
-      this.subjects.push({ text, checked: false });
-      this.increment();
-      this.saveToLocalStorage();
-    },
-
-    // 📌 체크박스 상태 변경 (반응형 문제 해결)
-    toggleCheck(index) {
-      this.subjects[index] = {
-        ...this.subjects[index], // ✅ 기존 데이터 복사
-        checked: !this.subjects[index].checked, // ✅ 체크 상태 변경
-      };
-      this.saveToLocalStorage();
-    },
-
-    // 📌 항목 수정 기능
-    editSubject(index, newText) {
-      if (newText.trim()) {
-        this.subjects[index].text = newText;
+          // 🔥 subjects가 배열인지 확인하고 아니면 초기화
+          if (Array.isArray(parsedData)) {
+            this.subjects = parsedData;
+          } else {
+            console.warn("⚠️ subjects 데이터가 배열이 아님. 초기화합니다.");
+            this.subjects = [];
+            this.saveToLocalStorage();
+          }
+        }
+      } catch (error) {
+        console.error("❌ JSON 파싱 오류! LocalStorage를 초기화합니다.");
+        this.subjects = [];
         this.saveToLocalStorage();
       }
     },
 
-    // 📌 항목 삭제 기능
+    // 📌 할 일 추가 (✅ 반응형 문제 해결 및 최적화)
+    addSubject(text) {
+      this.subjects = [...this.subjects, { text, checked: false }]; // ✅ 새로운 배열 할당
+      this.saveToLocalStorage();
+    },
+
+    // 📌 **체크박스 상태 변경 (✅ 반응형 문제 완벽 해결)**
+    toggleCheck(index) {
+      this.subjects = this.subjects.map((subject, i) =>
+        i === index ? { ...subject, checked: !subject.checked } : subject
+      );
+      this.saveToLocalStorage();
+    },
+
+    // 📌 항목 수정 기능 (✅ 반응형 문제 해결)
+    editSubject(index, newText) {
+      if (newText.trim()) {
+        this.subjects = this.subjects.map((subject, i) =>
+          i === index ? { ...subject, text: newText } : subject
+        );
+        this.saveToLocalStorage();
+      }
+    },
+
+    // 📌 항목 삭제 기능 (✅ 반응형 문제 해결)
     removeSubject(index) {
-      this.subjects.splice(index, 1);
-      this.decrement();
+      this.subjects = this.subjects.filter((_, i) => i !== index);
       this.saveToLocalStorage();
     },
   },
 });
 
-// ✅ store가 생성될 때 `localStorage`에서 데이터 로드
+// ✅ store가 생성될 때 LocalStorage에서 데이터 로드
 export function useInitStore() {
   const store = useDataStore();
   onMounted(() => {

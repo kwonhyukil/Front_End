@@ -10,11 +10,13 @@ const editIndex = ref(null);
 const editText = ref("");
 const inputRef = ref(null);
 
-// 📌 새로운 항목 추가
-const addText = () => {
+// 📌 새로운 항목 추가 (입력 후 초기화 + 자동 포커스)
+const addText = async () => {
   if (text.value.trim()) {
     store.addSubject(text.value);
+    await nextTick();
     text.value = "";
+    document.querySelector(".task-input")?.focus();
   }
 };
 
@@ -40,7 +42,7 @@ const deleteItem = (index) => {
   store.removeSubject(index);
 };
 
-// 📌 체크박스 상태 변경
+// 📌 **체크박스 상태 변경 (✅ 반응형 문제 해결 + LocalStorage 동기화)**
 const toggleCheck = (index) => {
   store.toggleCheck(index);
 };
@@ -61,7 +63,8 @@ const toggleCheck = (index) => {
         class="task-item" 
         :class="{ completed: subject.checked }"
       >
-        <input type="checkbox" :checked="subject.checked" @change="toggleCheck(index)">
+<!-- ✅ 체크박스를 `v-model` 대신 `:checked`로 변경 (반응형 문제 해결) -->
+<input type="checkbox" :checked="subject.checked" @change="toggleCheck(index)">
 
         <span v-if="editIndex === index">
           <input type="text" v-model="editText" ref="inputRef" class="edit-input">
@@ -77,14 +80,17 @@ const toggleCheck = (index) => {
       </div>
     </div>
 
+    <!-- ✅ 입력칸 유지 -->
     <div class="input-container">
-      <input type="text" v-model="text" placeholder="할 일을 입력하세요" autofocus class="task-input">
+      <input type="text" v-model="text" placeholder="할 일을 입력하세요" class="task-input">
       <button @click="addText" class="add-btn">➕ 등록</button>
     </div>
   </div>
 </template>
 
 <style>
+/* ✅ 기존 스타일 유지 */
+
 /* ✅ 전체 레이아웃 */
 .container {
   max-width: 400px;
@@ -139,10 +145,24 @@ h1 {
   transition: 0.3s;
 }
 
-/* ✅ 체크된 항목 스타일 */
+/* ✅ 체크된 항목 스타일 (빗금 효과 추가) */
 .completed {
   text-decoration: line-through;
   color: #999;
+  position: relative;
+}
+
+/* ✅ ✅ ✅ 빗금 효과 추가 (변경된 부분) */
+.completed::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: red;
+  transform: rotate(-10deg);
+  opacity: 0.7;
 }
 
 /* ✅ 입력 폼 */
@@ -224,5 +244,89 @@ h1 {
 
 .cancel-btn:hover {
   color: #5a6268;
+}
+</style>
+✅ 🚀 홈.vue 스타일 코드 (기존 코드 유지 + 빗금 추가)
+vue
+복사
+편집
+<style>
+/* ✅ 기존 스타일 유지 */
+
+/* ✅ 전체 레이아웃 */
+.container {
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #ffffff;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  text-align: center;
+}
+
+/* ✅ 제목 스타일 */
+h1 {
+  font-size: 24px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+/* ✅ 상태 카드 (할 일 개수) */
+.status-card {
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 15px;
+  font-size: 18px;
+}
+
+.count {
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* ✅ 체크리스트 스타일 */
+.task-list {
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 5px;
+}
+
+/* ✅ 리스트 스타일 */
+ul {
+  list-style-type: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+li {
+  padding: 10px;
+  font-size: 16px;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-bottom: 5px;
+  transition: all 0.3s ease;
+}
+
+/* ✅ 체크된 항목 스타일 */
+.completed {
+  text-decoration: line-through;
+  color: #999;
+  font-style: italic;
+  background: #e9ecef;
+}
+
+/* ✅ ✅ ✅ 빗금 효과 추가 (변경된 부분) */
+.completed::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: red;
+  transform: rotate(0deg);
+  opacity: 0.7;
 }
 </style>

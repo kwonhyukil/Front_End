@@ -24,7 +24,16 @@ const store = useDataStore();
   </div>
 </template>
 
+
 <style>
+
+/* ✅ 체크된 항목 스타일 */
+.completed {
+  text-decoration: line-through;
+  color: #999;
+  background: #e9ecef;
+}
+
 /* ✅ 전체 레이아웃 */
 .container {
   max-width: 400px;
