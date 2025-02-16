@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../../Users/YJU/Downloads/myStarbucksWebClone-main/images"
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "starbucks"
+	}
+}
