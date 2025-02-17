@@ -1,43 +1,62 @@
-<!-- Option API -->
-<script>
-    // data()에서 반환된 속성들은 반응적인 상태가 되어
-    // 'this'에 노출됩니다.
-    export default {
-        data () {
-            return {
-                count: 0
-            }
-        },
+<script setup>
+import { ref, onMounted } from "vue";
+import axios from "axios";
 
-        // methods는 속성 값을 변경하고 업데이트 할 수 있는 함수
-        // 템플릿 내에서 이벤트 헨들러로 바인딩 될 수 있음
-        methods: {
-            increment() {
-                this.count++
-            },
-            decreased() {
-                this.count--
-            }
-        },
-        // 생명주기 훅 (Lifecycle hooks)는 컴포넌트 생명주기의
-        // 여러 단계에서 호출됩니다.
-        // 이 함수는 컴포넌트가 마운ㅌ 된 후 호출됩니다.
-        mounted() {
-            console.log('숫자 세기의 초기값은 ${ this.count } 입니다.')
-        }
+const users = ref([]);  // 사용자 목록
+const newUser = ref({ name: "", email: "" }); // 새 사용자 정보
+
+// 📌 1️⃣ 사용자 목록 가져오기
+const fetchUsers = async () => {
+    try {
+        const response = await axios.get("http://localhost:5000/api/users");
+        users.value = response.data;
+    } catch (error) {
+        console.error("사용자 목록 불러오기 실패:", error);
     }
-    
-    
+};
+
+// 📌 2️⃣ 새 사용자 추가하기
+const addUser = async () => {
+    try {
+        await axios.post("http://localhost:5000/api/users", newUser.value);
+        newUser.value = { name: "", email: "" }; // 입력 필드 초기화
+        fetchUsers(); // 목록 다시 불러오기
+    } catch (error) {
+        console.error("사용자 추가 실패:", error);
+    }
+};
+
+// 📌 3️⃣ 사용자 삭제하기
+const deleteUser = async (id) => {
+    try {
+        await axios.delete(`http://localhost:5000/api/users/${id}`);
+        fetchUsers(); // 목록 다시 불러오기
+    } catch (error) {
+        console.error("사용자 삭제 실패:", error);
+    }
+};
+
+// 페이지 로드 시 사용자 목록 불러오기
+onMounted(fetchUsers);
 </script>
 
 <template>
-    <h1>{{ count }}</h1>
-    <button @click="increment">증가</button>
-    <button @click="decreased">감소</button>
-</template>
+    <div>
+        <h2>MySQL 사용자 목록</h2>
 
-<style scoped>
-button{
-    font-weight: bold;
-}
-</style>
+        <!-- 사용자 입력 폼 -->
+        <div>
+            <input v-model="newUser.name" placeholder="이름 입력" />
+            <input v-model="newUser.email" placeholder="이메일 입력" />
+            <button @click="addUser">추가</button>
+        </div>
+
+        <!-- 사용자 목록 표시 -->
+        <ul>
+            <li v-for="user in users" :key="user.id">
+                {{ user.name }} ({{ user.email }})
+                <button @click="deleteUser(user.id)">삭제</button>
+            </li>
+        </ul>
+    </div>
+</template>

@@ -11,7 +11,7 @@
         :key="fruit"
         :name="fruit">
         {{ fruit }}
-        </Fruit>
+        </Fruit>cd
     </ul>
 </template>
 
