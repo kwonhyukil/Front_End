@@ -1,0 +1,17 @@
+// Default variable overrides
+$primary: #FDC000;
+
+// Required
+@import "../../node_modules/bootstrap/scss/functions"; // ✅ 세미콜론 추가
+@import "../../node_modules/bootstrap/scss/variables"; // ✅ 세미콜론 추가
+@import "../../node_modules/bootstrap/scss/mixins";    // ✅ 세미콜론 추가
+
+@import "../../node_modules/bootstrap/scss/bootstrap.scss"; // ✅ 세미콜론 추가
+
+body {
+    font-weight: $display-font-weight;
+  }
+  
+
+@import "../../node_modules/bootstrap/scss/grid";
+@import "../../node_modules/bootstrap/scss/utilities";
