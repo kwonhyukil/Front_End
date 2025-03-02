@@ -12,7 +12,7 @@ const app = express();
 // ✅ CORS 설정 (프론트엔드 URL 허용)
 app.use(
   cors({
-    origin: "http://localhost:5174",
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );

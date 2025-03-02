@@ -13,6 +13,7 @@ export const useAuthStore = defineStore("auth", {
     async fetchUser() {
       try {
         const token = localStorage.getItem("token");
+        console.log("📥 저장된 JWT 토큰:", token);
         if (!token) {
           console.error("❌ JWT 토큰 없음");
           this.user = null;

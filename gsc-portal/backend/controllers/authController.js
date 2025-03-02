@@ -1,6 +1,7 @@
 import axios from "axios";
 import jwt from "jsonwebtoken";
 import keys from "../config/keys.js";
+import pool from "../config/db.js";
 
 /**
  * ✅ Google OAuth 로그인 URL 생성 및 리디렉트
