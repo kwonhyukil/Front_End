@@ -5,6 +5,7 @@
         <li><router-link to="/">홈</router-link></li>
         <li><router-link to="/timetable">시간표</router-link></li>
         <li><router-link to="/notices">공지사항</router-link></li>
+        <li v-if="user?.role === 'admin'"><router-link to="/admin">관리자 페이지</router-link></li>
       </ul>
       <div class="user-section">
         <button v-if="!user" @click="loginWithGoogle">로그인</button>

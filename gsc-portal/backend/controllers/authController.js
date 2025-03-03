@@ -1,120 +1,173 @@
-import axios from "axios";
-import jwt from "jsonwebtoken";
-import keys from "../config/keys.js";
-import pool from "../config/db.js";
+import {
+  getUserByEmail,
+  getPendingUserByEmail,
+  registerPendingUserService,
+  updateLastLogin,
+} from "../services/authService.js";
+import { generateJWT } from "../utils/jwtUtils.js";
+import { validateEmailDomain } from "../utils/emailUtils.js";
+import { getGoogleUser, getGoogleAuthUrl } from "../utils/googleOAuth.js";
 
 /**
- * ✅ Google OAuth 로그인 URL 생성 및 리디렉트
+ * ✅ Google OAuth 로그인 요청
  */
 export const googleLogin = (req, res) => {
-  if (!keys.googleClientID || !keys.googleRedirectURI) {
-    return res
-      .status(500)
-      .json({ error: "Google OAuth 설정이 누락되었습니다." });
-  }
-
-  const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${
-    keys.googleClientID
-  }&redirect_uri=${encodeURIComponent(
-    keys.googleRedirectURI
-  )}&response_type=code&scope=openid email profile&prompt=consent`;
-
-  console.log("🔗 Google 로그인 URL:", googleAuthUrl);
+  const googleAuthUrl = getGoogleAuthUrl();
   res.redirect(googleAuthUrl);
 };
 
 /**
- * ✅ Google OAuth 콜백 처리 (Authorization Code 한 번만 사용)
+ * ✅ Google OAuth 콜백 처리
  */
 export const googleCallback = async (req, res) => {
   try {
     const { code } = req.query;
-    console.log("✅ Authorization Code 수신:", code);
-
     if (!code) {
       return res.status(400).json({ error: "Authorization code is missing" });
     }
 
-    // 🔹 Authorization Code가 이미 사용되었는지 확인
-    if (req.session && req.session.lastAuthCode === code) {
-      console.error("❌ Authorization Code 재사용 방지 (이미 사용됨)");
-      return res
-        .status(400)
-        .json({ error: "Authorization code has already been used" });
-    }
-
-    // 🔹 Google에서 Access Token 요청
-    const tokenResponse = await axios.post(
-      "https://oauth2.googleapis.com/token",
-      new URLSearchParams({
-        client_id: keys.googleClientID,
-        client_secret: keys.googleClientSecret,
-        redirect_uri: keys.googleRedirectURI,
-        grant_type: "authorization_code",
-        code: code,
-      }),
-      { headers: { "Content-Type": "application/x-www-form-urlencoded" } }
-    );
-
-    if (!tokenResponse.data.access_token) {
-      console.error("❌ Google Access Token 발급 실패!");
-      return res.status(500).json({ error: "Google Access Token 발급 실패" });
-    }
-
-    console.log("✅ Google Access Token:", tokenResponse.data.access_token);
-
-    // 🔹 Google에서 사용자 정보 가져오기
-    const userInfoResponse = await axios.get(
-      "https://www.googleapis.com/oauth2/v2/userinfo",
-      {
-        headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` },
-      }
-    );
-
-    if (!userInfoResponse.data) {
-      console.error("❌ 사용자 정보를 가져올 수 없습니다.");
+    const userInfo = await getGoogleUser(code);
+    if (!userInfo) {
       return res.status(500).json({ error: "사용자 정보 요청 실패" });
     }
 
-    const { id, name, given_name, family_name, picture } =
-      userInfoResponse.data;
-    console.log("👤 Google 사용자 정보:", userInfoResponse.data);
+    const { name, email, picture } = userInfo;
 
-    // 🔹 JWT 생성 (email 제외) ✅ 수정: email 제외
-    const token = jwt.sign(
-      {
-        user: {
-          id,
-          name,
-          given_name,
-          family_name,
-          picture,
-        },
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "1h" }
-    );
-
-    console.log("🔑 JWT 생성 완료:", token);
-
-    // ✅ 세션에 Authorization Code 저장 (재사용 방지)
-    if (req.session) {
-      req.session.lastAuthCode = code;
+    // 🔹 이메일 도메인 검증
+    if (!validateEmailDomain(email)) {
+      return res.redirect(
+        `${process.env.FRONTEND_URL}/login?error=invalid_domain`
+      );
     }
 
-    // ✅ JWT를 프론트엔드 `/auth/callback`으로 리디렉트
-    return res.redirect(
-      `${process.env.FRONTEND_URL}/auth/callback?token=${token}`
-    );
+    // 🔹 기존 사용자 확인 (users 테이블 조회)
+    let user = await getUserByEmail(email);
+    if (user) {
+      if (user.status === "pending") {
+        return res.redirect(`${process.env.FRONTEND_URL}/register`);
+      }
+      await updateLastLogin(email);
+      return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+    }
+
+    // 🔹 회원가입 신청 여부 확인 (registrations 테이블 조회)
+    let pendingUser = await getPendingUserByEmail(email);
+    if (pendingUser) {
+      return res.redirect(`${process.env.FRONTEND_URL}/register`);
+    }
+
+    // 🔹 신규 유저 → 회원가입 페이지로 이동
+    return res.redirect(`${process.env.FRONTEND_URL}/register`);
   } catch (error) {
-    console.error(
-      "❌ Google OAuth 오류:",
-      error.response ? error.response.data : error.message
+    console.error("❌ Google OAuth 오류:", error.message);
+    return res
+      .status(500)
+      .json({ error: "Google 로그인 실패", details: error.message });
+  }
+};
+
+/**
+ * ✅ 회원가입 API
+ */
+export const registerUser = async (req, res) => {
+  console.log("📩 받은 데이터:", req.body);
+
+  try {
+    let { name, email, studentid, phone, year, status, role } = req.body;
+
+    // 🔹 필수 입력값 검증
+    if (!name || !email || !studentid || !phone || !year || !status || !role) {
+      console.error("❌ 필수 입력값이 누락되었습니다:", {
+        name,
+        email,
+        studentid,
+        phone,
+        year,
+        status,
+        role,
+      });
+      return res.status(400).json({ error: "모든 필드를 입력해야 합니다." });
+    }
+
+    // 🔹 role 값 정리 및 검증
+    role = role.trim().normalize("NFC");
+    console.log(
+      "📌 받은 role 값:",
+      `"${role}"`,
+      "| 타입:",
+      typeof role,
+      "| 길이:",
+      role.length
     );
-    return res.status(500).json({
-      error: "Google 로그인 실패",
-      details: error.response ? error.response.data : error.message,
+
+    const validRoles = {
+      학생: "학생",
+      관리자: "관리자",
+      교수: "교수",
+      조교: "조교",
+    };
+    role = validRoles[role] || "학생"; // 유효하지 않으면 기본값 "학생" 적용
+
+    console.log("🔍 백엔드에서 처리한 role 값:", role);
+
+    // 🔹 특정 이메일이면 자동으로 `role = 'admin'`
+    if (email === "gurdlf320@g.yju.ac.kr") {
+      role = "관리자";
+    }
+
+    // 🔹 회원가입 데이터 확인 로그
+    console.log("📌 회원가입 데이터 확인:", {
+      name,
+      email,
+      studentid,
+      phone,
+      year,
+      status,
+      role,
     });
+
+    // 🔹 기존 가입 여부 확인 (users 테이블 조회)
+    if (await getUserByEmail(email)) {
+      return res.status(400).json({ error: "이미 가입된 이메일입니다." });
+    }
+
+    // 🔹 기존 회원가입 신청 여부 확인 (registrations 테이블 조회)
+    if (await getPendingUserByEmail(email)) {
+      return res
+        .status(400)
+        .json({ error: "이미 회원가입 신청이 완료되었습니다." });
+    }
+
+    // ✅ 회원가입 요청 저장
+    const insertId = await registerPendingUserService({
+      name,
+      email,
+      studentid,
+      phone,
+      year,
+      status,
+      role,
+    });
+
+    res.status(201).json({
+      message:
+        "회원가입 신청이 완료되었습니다. 관리자 승인 후 로그인 가능합니다.",
+      user: insertId,
+    });
+  } catch (error) {
+    console.error("❌ 회원가입 오류:", error.message);
+    res.status(500).json({ error: "서버 오류 발생" });
+  }
+};
+
+/**
+ * ✅ 사용자 정보 조회 (JWT 인증 필수)
+ */
+export const getUser = (req, res) => {
+  try {
+    res.json({ user: req.user });
+  } catch (error) {
+    res.status(500).json({ error: "사용자 정보를 불러오는 중 오류 발생" });
   }
 };
 
@@ -126,33 +179,8 @@ export const logout = (req, res) => {
     if (err) return res.status(500).json({ error: "로그아웃 실패" });
 
     req.session.destroy(() => {
-      res.clearCookie("connect.sid"); // ✅ 세션 쿠키 삭제
-      res.redirect(process.env.FRONTEND_URL); // ✅ 프론트엔드 메인으로 리디렉트
+      res.clearCookie("connect.sid");
+      res.redirect(process.env.FRONTEND_URL);
     });
   });
-};
-
-/**
- * ✅ 사용자 정보 가져오기 (JWT 인증)
- */
-export const getUser = (req, res) => {
-  try {
-    const authHeader = req.headers.authorization;
-    const token = authHeader?.startsWith("Bearer ")
-      ? authHeader.split(" ")[1]
-      : null;
-
-    console.log("🔍 Authorization 헤더:", authHeader);
-    console.log("🔑 Extracted Token:", token);
-
-    if (!token) return res.status(401).json({ error: "토큰이 없습니다." });
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    console.log("✅ 토큰 검증 성공:", decoded);
-
-    res.json({ user: decoded.user });
-  } catch (error) {
-    console.error("❌ JWT 검증 실패:", error.message);
-    res.status(401).json({ error: "인증 실패" });
-  }
 };

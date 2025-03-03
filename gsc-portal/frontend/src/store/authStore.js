@@ -56,11 +56,16 @@ export const useAuthStore = defineStore("auth", {
       router.push("/");
     },
 
+    async loginWithGoogle() {
+      window.location.href = import.meta.env.VITE_BACKEND_URL + "/auth/google";
+    },
+
     // ✅ 로그아웃 처리
     async logout() {
       this.user = null;
       localStorage.removeItem("token");
       router.push("/");
+      window.location.href = "/";
     },
   },
 });

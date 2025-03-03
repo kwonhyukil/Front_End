@@ -39,6 +39,8 @@ const logout = () => {
 };
 
 onMounted(checkLogin);
+
+
 </script>
   <style scoped>
   .home-container {
