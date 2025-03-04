@@ -109,6 +109,7 @@
         status: status.value.trim(),
         role: role.value.trim(), // ✅ role 값도 공백 제거
       };
+      
 
       // ✅ ENUM 값 검증 (올바른 값만 전달)
       const validRoles = ["학생", "관리자", "교수", "조교"];
