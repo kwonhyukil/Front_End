@@ -2,9 +2,13 @@ import {
   getUserByEmail,
   getPendingUserByEmail,
   registerPendingUserService,
+  updateUserRefreshToken,
   updateLastLogin,
 } from "../services/authService.js";
-import { generateJWT } from "../utils/jwtUtils.js";
+import {
+  generateAccessToken,
+  generateRefreshToken,
+} from "../utils/jwtUtils.js";
 import { validateEmailDomain } from "../utils/emailUtils.js";
 import { getGoogleUser, getGoogleAuthUrl } from "../utils/googleOAuth.js";
 
@@ -31,7 +35,7 @@ export const googleCallback = async (req, res) => {
       return res.status(500).json({ error: "사용자 정보 요청 실패" });
     }
 
-    const { name, email, picture } = userInfo;
+    const { email } = userInfo;
 
     // 🔹 이메일 도메인 검증
     if (!validateEmailDomain(email)) {
@@ -43,12 +47,16 @@ export const googleCallback = async (req, res) => {
     // 🔹 기존 사용자 확인 (users 테이블 조회)
     let user = await getUserByEmail(email);
     if (user) {
-      if (user.status === "pending") {
-        return res.redirect(`${process.env.FRONTEND_URL}/register`);
-      }
       await updateLastLogin(email);
-      return res.redirect(`${process.env.FRONTEND_URL}/dashboard`);
+      return res.redirect(`${process.env.FRONTEND_URL}/register`);
     }
+
+    // ✅ Access & Refresh Token 발급
+    const accessToken = generateAccessToken(user);
+    const refreshToken = generateRefreshToken(user);
+
+    // ✅ Refresh Token을 DB에 저장
+    await updateUserRefreshToken(email, refreshToken);
 
     // 🔹 회원가입 신청 여부 확인 (registrations 테이블 조회)
     let pendingUser = await getPendingUserByEmail(email);
@@ -91,6 +99,7 @@ export const registerUser = async (req, res) => {
 
     // 🔹 role 값 정리 및 검증
     role = role.trim().normalize("NFC");
+
     console.log(
       "📌 받은 role 값:",
       `"${role}"`,
@@ -148,7 +157,19 @@ export const registerUser = async (req, res) => {
       status,
       role,
     });
+    // 🔹 특정 이메일(`gurdlf320@g.yju.ac.kr`)은 즉시 users 테이블로 이동 후 JWT 생성
+    if (email === "gurdlf320@g.yju.ac.kr") {
+      const accessToken = generateAccessToken({ email, role });
+      const refreshToken = generateRefreshToken({ email });
 
+      await updateUserRefreshToken(email, refreshToken);
+
+      return res.status(201).json({
+        message: "회원가입 및 자동 승인이 완료되었습니다.",
+        token: accessToken,
+        refreshToken,
+      });
+    }
     res.status(201).json({
       message:
         "회원가입 신청이 완료되었습니다. 관리자 승인 후 로그인 가능합니다.",
@@ -156,6 +177,26 @@ export const registerUser = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ 회원가입 오류:", error.message);
+    res.status(500).json({ error: "서버 오류 발생" });
+  }
+};
+
+/**
+ * ✅ Refresh Token을 이용한 JWT 갱신
+ */
+export const refreshToken = async (req, res) => {
+  try {
+    const refreshToken = req.headers.authorization?.split(" ")[1];
+    if (!refreshToken)
+      return res.status(401).json({ error: "Refresh Token이 필요합니다." });
+
+    const newAccessToken = generateAccessToken({
+      email: req.user.email,
+      role: req.user.role,
+    });
+    res.status(200).json({ accessToken: newAccessToken });
+  } catch (error) {
+    console.error("❌ Refresh Token 처리 오류:", error.message);
     res.status(500).json({ error: "서버 오류 발생" });
   }
 };

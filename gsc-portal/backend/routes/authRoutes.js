@@ -7,6 +7,7 @@ import {
   getUser,
 } from "../controllers/authController.js";
 import { authenticateToken } from "../middleware/authMiddleware.js";
+import { refreshToken } from "../controllers/authController.js";
 
 const router = express.Router();
 
@@ -21,6 +22,9 @@ router.get("/user", authenticateToken, getUser);
 
 // ✅ 회원가입 API 추가
 router.post("/register", registerUser); // ✅ registerUserService가 아니라 registerUser 사용
+
+// JWT 갱신
+router.post("/refresh-token", refreshToken);
 
 // ✅ 로그아웃 API
 router.get("/logout", logout);
