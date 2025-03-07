@@ -20,6 +20,7 @@ export const googleLogin = (req, res) => {
   res.redirect(googleAuthUrl);
 };
 
+
 /**
  * ✅ Google OAuth 콜백 처리
  */
