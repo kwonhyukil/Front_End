@@ -1,3 +1,4 @@
+// backend/config/db.js
 import mysql from "mysql2/promise";
 import dotenv from "dotenv";
 
@@ -13,7 +14,7 @@ export const pool = mysql.createPool({
   queueLimit: 0,
 });
 
-// ✅ DB 초기화 함수
+// ✅ DB 연결 테스트용 함수
 export const initializeDatabase = async () => {
   try {
     const connection = await pool.getConnection();

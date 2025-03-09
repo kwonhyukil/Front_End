@@ -1,16 +1,13 @@
 import express from "express";
-import {
-  getScheduleByUser,
-  addSchedule,
-} from "../controllers/scheduleController.js";
-import { authenticateToken } from "../middleware/authMiddleware.js";
+import { getSchedule, addSchedule } from "../controllers/scheduleController.js";
+import { authenticateToken, checkRole } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// 🔹 사용자별 시간표 조회 (로그인 필요)
-router.get("/", authenticateToken, getScheduleByUser);
+// ✅ 전체 시간표 가져오기
+router.get("/", authenticateToken, getSchedule);
 
-// 🔹 교수/관리자가 시간표 추가 가능
-router.post("/", authenticateToken, addSchedule);
+// ✅ 새 시간표 추가 (관리자/교수만)
+router.post("/", authenticateToken, checkRole(["관리자", "교수"]), addSchedule);
 
 export default router;

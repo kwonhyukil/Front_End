@@ -1,3 +1,4 @@
+<!-- frontend/src/views/RegisterPage.vue -->
 <template>
   <div class="register-wrapper">
     <h2>회원가입</h2>
@@ -5,7 +6,7 @@
       <input v-model="name" placeholder="이름" required />
       <input v-model="studentid" placeholder="학번" required />
       <input v-model="phone" placeholder="전화번호" required />
-      <input v-model="email" placeholder="이메일" required />
+      <input v-model="email" placeholder="이메일(@g.yju.ac.kr)" required />
       <select v-model="year">
         <option value="1학년">1학년</option>
         <option value="2학년">2학년</option>
@@ -50,21 +51,15 @@ const handleRegister = async () => {
       status: status.value,
       role: role.value,
     };
-
-    const response = await axios.post(
-      import.meta.env.VITE_BACKEND_URL + "/auth/register",
-      userData
-    );
-
+    const response = await axios.post(import.meta.env.VITE_BACKEND_URL + "/auth/register", userData);
     alert(response.data.message);
 
-    // 관리자 승인 후 로그인 가능
-    // 관리자인 경우 즉시 승인되어 token, refreshToken 받을 수 있음
+    // 관리자 메일이면 즉시 승인 => token, refreshToken
     if (response.data.token && response.data.refreshToken) {
-      alert("관리자 계정으로 즉시 승인되었습니다. 로그인을 진행하세요.");
+      alert("관리자 계정 승인 완료! 다시 로그인해주세요.");
     }
   } catch (error) {
-    console.error("❌ 회원가입 실패:", error.response?.data || error);
+    console.error("회원가입 오류:", error);
     alert(error.response?.data?.error || "회원가입 실패");
   }
 };
@@ -72,7 +67,7 @@ const handleRegister = async () => {
 
 <style scoped>
 .register-wrapper {
-  margin: 50px auto;
+  margin: 80px auto;
   max-width: 400px;
   text-align: center;
 }

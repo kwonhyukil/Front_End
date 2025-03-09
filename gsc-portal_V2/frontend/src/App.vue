@@ -1,3 +1,4 @@
+<!-- frontend/src/App.vue -->
 <template>
   <div>
     <NavBar />
@@ -10,9 +11,5 @@ import NavBar from "./components/NavBar.vue";
 </script>
 
 <style scoped>
-/* 전체 페이지 스타일 */
-div {
-  font-family: Arial, sans-serif;
-  color: black;
-}
+/* 전체적인 레이아웃, NavBar 아래 컨텐츠가 보이도록 패딩 */
 </style>
