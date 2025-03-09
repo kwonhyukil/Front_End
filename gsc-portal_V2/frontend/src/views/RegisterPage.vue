@@ -1,181 +1,79 @@
 <template>
-    <div class="register-wrapper">
-      <div class="register-container">
-        <h2>회원가입</h2>
-        <form @submit.prevent="register">
-          
-          <div class="input-group">
-            <label for="name">이름</label>
-            <input type="text" id="name" v-model="name" placeholder="이름을 입력하세요" required />
-          </div>
-  
-          <div class="input-group">
-            <label for="studentid">학번</label>
-            <input type="text" id="studentid" v-model="studentid" placeholder="학번을 입력하세요" required />
-          </div>
-  
-          <div class="input-group">
-            <label for="phone">전화번호</label>
-            <input type="tel" id="phone" v-model="phone" placeholder="010-1234-5678" required pattern="010-[0-9]{4}-[0-9]{4}" />
-          </div>
-  
-          <div class="input-group">
-            <label for="email">이메일</label>
-            <input type="email" id="email" v-model="email" placeholder="이메일을 입력하세요" required />
-          </div>
-  
-          <div class="input-group">
-            <label for="year">학년</label>
-            <select id="year" v-model="year" required>
-              <option disabled value="">학년 선택</option>
-              <option value="1학년">1학년</option>
-              <option value="2학년">2학년</option>
-              <option value="3학년">3학년</option>
-            </select>
-          </div>
-  
-          <div class="input-group">
-            <label for="status">재학 상태</label>
-            <select id="status" v-model="status" required>
-              <option disabled value="">재학 상태 선택</option>
-              <option value="재학">재학</option>
-              <option value="휴학">휴학</option>
-              <option value="유학생">유학생</option>
-            </select>
-          </div>
-  
-          <div class="input-group">
-            <label for="role">권한</label>
-            <select id="role" v-model="role" required>
-              <option disabled value="">권한 선택</option>
-              <option value="학생">학생</option>
-              <option value="관리자">관리자</option>
-              <option value="교수">교수</option>
-              <option value="조교">조교</option>
-            </select>
-          </div>
-  
-          <button type="submit">가입하기</button>
-        </form>
-      </div>
-    </div>
-  </template>
-  
+  <div class="register-wrapper">
+    <h2>회원가입</h2>
+    <form @submit.prevent="handleRegister">
+      <input v-model="name" placeholder="이름" required />
+      <input v-model="studentid" placeholder="학번" required />
+      <input v-model="phone" placeholder="전화번호" required />
+      <input v-model="email" placeholder="이메일" required />
+      <select v-model="year">
+        <option value="1학년">1학년</option>
+        <option value="2학년">2학년</option>
+        <option value="3학년">3학년</option>
+      </select>
+      <select v-model="status">
+        <option value="재학">재학</option>
+        <option value="휴학">휴학</option>
+        <option value="유학생">유학생</option>
+      </select>
+      <select v-model="role">
+        <option value="학생">학생</option>
+        <option value="관리자">관리자</option>
+        <option value="교수">교수</option>
+        <option value="조교">조교</option>
+      </select>
+      <button type="submit">회원가입</button>
+    </form>
+  </div>
+</template>
+
 <script setup>
 import { ref } from "vue";
 import axios from "axios";
-import { useRouter } from "vue-router";
-
-const router = useRouter();
 
 const name = ref("");
 const studentid = ref("");
 const phone = ref("");
 const email = ref("");
-const year = ref("");
-const status = ref("");
+const year = ref("1학년");
+const status = ref("재학");
 const role = ref("학생");
 
-const register = async () => {
+const handleRegister = async () => {
   try {
-    console.log("✅ Vue에서 보낸 role 값:", role.value, "| type:", typeof role.value);
-
     const userData = {
-      name: name.value.trim(),
-      studentid: studentid.value.trim(),
-      phone: phone.value.trim(),
-      email: email.value.trim(),
-      year: year.value.trim(),
-      status: status.value.trim(),
-      role: role.value.trim(), // 🔹 공백 제거 추가
+      name: name.value,
+      email: email.value,
+      studentid: studentid.value,
+      phone: phone.value,
+      year: year.value,
+      status: status.value,
+      role: role.value,
     };
 
-    console.log("📤 회원가입 요청 데이터:", userData);
+    const response = await axios.post(
+      import.meta.env.VITE_BACKEND_URL + "/auth/register",
+      userData
+    );
 
-    // 회원가입 요청 보내기
-    await axios.post(import.meta.env.VITE_BACKEND_URL + "/auth/register", userData);
+    alert(response.data.message);
 
-    // ✅ 회원가입 완료 메시지 띄우기
-    alert("✅ 회원가입 신청이 완료되었습니다!");
-
-    // ✅ 홈 화면으로 리다이렉트
-    router.push("/");
-
+    // 관리자 승인 후 로그인 가능
+    // 관리자인 경우 즉시 승인되어 token, refreshToken 받을 수 있음
+    if (response.data.token && response.data.refreshToken) {
+      alert("관리자 계정으로 즉시 승인되었습니다. 로그인을 진행하세요.");
+    }
   } catch (error) {
-    console.error("❌ 회원가입 실패", error);
-    alert("회원가입 중 오류가 발생했습니다. 다시 시도해주세요.");
+    console.error("❌ 회원가입 실패:", error.response?.data || error);
+    alert(error.response?.data?.error || "회원가입 실패");
   }
 };
 </script>
-  
-  <style scoped>
-  /* ✅ 전체 페이지 꽉 차게 사용 */
-  .register-wrapper {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    background: #f1f5f9;
-  }
-  
-  /* ✅ 컨테이너 크기 확장 */
-  .register-container {
-    width: 100%;
-    max-width: 1000;
-    padding: 50px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-    text-align: center;
-  }
-  
-  /* ✅ 입력 필드 전체 너비 사용 */
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 15px;
-  }
-  
-  label {
-    font-weight: bold;
-    font-size: 16px;
-    margin-bottom: 5px;
-  }
-  
-  /* ✅ 입력 필드 스타일 */
-  input,
-  select {
-    width: 100%;
-    padding: 14px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    font-size: 16px;
-    background: #f8f9fa;
-    transition: border 0.3s;
-  }
-  
-  input:focus,
-  select:focus {
-    border: 1px solid #007bff;
-    outline: none;
-  }
-  
-  /* ✅ 버튼 스타일 */
-  button {
-    width: 100%;
-    padding: 14px;
-    background: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    font-size: 18px;
-    cursor: pointer;
-    transition: background 0.3s;
-  }
-  
-  button:hover {
-    background: #0056b3;
-  }
-  </style>
-  
+
+<style scoped>
+.register-wrapper {
+  margin: 50px auto;
+  max-width: 400px;
+  text-align: center;
+}
+</style>

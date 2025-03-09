@@ -3,47 +3,34 @@
       <div class="logo">GSC_PORTAL</div>
       <ul class="nav-links">
         <li><router-link to="/">홈</router-link></li>
-        <li><router-link to="/timetable">시간표</router-link></li>
+        <li><router-link to="/schedule">시간표</router-link></li>
         <li><router-link to="/notices">공지사항</router-link></li>
         <li v-if="user?.role === 'admin'"><router-link to="/admin">관리자 페이지</router-link></li>
       </ul>
-      <div class="user-section">
-        <button v-if="!user" @click="loginWithGoogle">로그인</button>
-        <div v-else class="user-info">
-          {{ user.name }}
-          <button @click="logout">로그아웃</button>
-        </div>
-      </div>
+      <div class="auth-section">
+      <span v-if="user">{{ user.name }}님</span>
+      <button v-if="!user" @click="loginWithGoogle">로그인</button>
+      <button v-else @click="logout">로그아웃</button>
+    </div>
     </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { computed } from "vue";
 import { useAuthStore } from "../store/authStore";
-import { useRouter } from "vue-router";
+
 
 const authStore = useAuthStore();
-const router = useRouter();
-const user = ref(null);
+const user = computed(() => authStore.user);
 
 const loginWithGoogle = () => {
-  window.location.href = import.meta.env.VITE_BACKEND_URL + "/auth/google";
+  authStore.loginWithGoogle();
 };
 
-const logout = async () => {
-  try {
-    await authStore.logout(); // ✅ 로그아웃 처리
-    user.value = null; // ✅ UI 상태 즉시 반영
-    router.push("/"); // ✅ 홈으로 리다이렉트
-  } catch (error) {
-    console.error("❌ 로그아웃 실패:", error);
-  }
+const logout = () => {
+  authStore.logout();
 };
 
-onMounted(async () => {
-  await authStore.fetchUser();
-  user.value = authStore.user;
-});
 </script>
 
 <style scoped>
