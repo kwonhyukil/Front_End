@@ -1,0 +1,1 @@
+// Registration 모델 ( 가입 대기 테이블 )

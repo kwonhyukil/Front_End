@@ -5,7 +5,7 @@ import router from "../router";
 
 export const useAuthStore = defineStore("auth", {
   state: () => ({
-    user: null,
+    user: JSON.parse(localStorage.getItem("user")) || null,
     token: localStorage.getItem("token") || null,
     refreshToken: localStorage.getItem("refreshToken") || null,
   }),
@@ -36,7 +36,7 @@ export const useAuthStore = defineStore("auth", {
       this.refreshToken = refreshToken;
       localStorage.setItem("token", accessToken);
       localStorage.setItem("refreshToken", refreshToken);
-      await this.fetchUser();
+      localStorage.setItem("user", JSON.stringify(await this.fetchUser())); // ✅ 사용자 정보 저장
       router.push("/home");
     },
 
@@ -48,8 +48,7 @@ export const useAuthStore = defineStore("auth", {
       this.user = null;
       this.token = null;
       this.refreshToken = null;
-      localStorage.removeItem("token");
-      localStorage.removeItem("refreshToken");
+      localStorage.clear(); // ✅ 모든 저장된 정보 초기화
       router.push("/login");
     },
 
@@ -70,6 +69,11 @@ export const useAuthStore = defineStore("auth", {
         console.error("❌ refreshAccessToken 오류:", error);
         this.logout();
       }
+    },
+    restoreUser() {
+      this.user = JSON.parse(localStorage.getItem("user")) || null;
+      this.token = localStorage.getItem("token") || null;
+      this.refreshToken = localStorage.getItem("refreshToken") || null;
     },
   },
 });
