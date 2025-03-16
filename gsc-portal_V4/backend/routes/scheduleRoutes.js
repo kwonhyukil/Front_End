@@ -8,7 +8,7 @@ import {
   createSchedule, // 시간표 등록
   updateSchedule, // 시간표 수정
   deleteSchedule, // 시간표 삭제
-} from "../controllers/scheduleController.js"; // 📌 오타 수정 (scheduleControler.js → scheduleController.js)
+} from "../controllers/scheduleControler.js";
 
 const router = Router();
 
