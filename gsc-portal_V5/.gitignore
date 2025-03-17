@@ -1,0 +1,49 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+# VS Code
+.vscode/
+.vscode/settings.json
+.vscode/launch.json
+
+# IntelliJ / JetBrains IDE
+.idea/
+*.iml
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+desktop.ini
+# 환경 변수 파일 (API 키, DB 정보 등 포함)
+.env
+.env.local
+.env.*.local
+config/*.json
+config/*.yml
+config/*.ini
+# 환경 변수 파일 제외
+backend/.env
+frontend/.env
