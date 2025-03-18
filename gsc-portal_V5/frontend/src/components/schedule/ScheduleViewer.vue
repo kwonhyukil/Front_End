@@ -23,7 +23,7 @@
           <tr v-for="hour in hours" :key="hour">
             <td class="hour-cell">{{ hour }}:00 ~ {{ hour+1 }}:00</td>
             <td
-              v-for="(day, dIdx) in days"
+              v-for="(day) in days"
               :key="day"
               class="schedule-cell"
               @click="cellClick(day, hour)"
@@ -99,7 +99,7 @@ export default {
       selectedDay.value=day;
       selectedHour.value=hour;
       showModal.value=true;
-    };
+    };ㅇ
     const handleCreated = () => {
       showModal.value=false;
       loadData();
