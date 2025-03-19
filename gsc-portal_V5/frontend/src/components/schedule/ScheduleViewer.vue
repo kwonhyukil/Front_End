@@ -77,9 +77,14 @@ export default {
     const canEdit = computed(() => authStore.isAdmin || authStore.isProfessor);
 
     const loadData = async () => {
+      console.log("🟡 loadData() 실행"); // 실행 여부 확인
       await scheduleStore.loadSchedules(selectedGrade.value);
+      console.log("🟢 schedules:", scheduleStore.schedules); // 데이터 확인
     };
-    onMounted(() => loadData());
+    onMounted(() => {
+      console.log("🟢 ScheduleViewer Mounted"); // 확인 로그 추가
+      loadData()
+    });
 
     const changeGrade = (g) => {
       selectedGrade.value = g;
@@ -99,16 +104,24 @@ export default {
       selectedDay.value=day;
       selectedHour.value=hour;
       showModal.value=true;
-    };ㅇ
+    };
     const handleCreated = () => {
       showModal.value=false;
       loadData();
+    };
+    const closeModal=()=>{
+      showModal.value=false;
+    };
+    const reloadSchedules=()=>{
+      // 새로 등록된 시간표 즉시 반영
+      loadData();
+      closeModal();
     };
 
     return {
       days, hours, selectedGrade, showModal, selectedDay, selectedHour,
       changeGrade, getClasses, cellClick, handleCreated,
-      canEdit, scheduleStore, authStore,
+      canEdit, scheduleStore, authStore,reloadSchedules,
     };
   },
 };

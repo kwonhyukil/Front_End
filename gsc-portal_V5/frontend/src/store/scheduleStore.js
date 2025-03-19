@@ -12,8 +12,10 @@ export const useScheduleStore = defineStore("schedule", () => {
   const schedules = ref([]);
 
   const loadSchedules = async (grade = "all") => {
+    console.log(`🟡 loadSchedules(${grade}) 실행`); // 실행 여부 확인
     try {
       schedules.value = await getSchedules(grade);
+      console.log("🟢 API 응답 데이터:", data); // 데이터 확인
     } catch (error) {
       console.error("loadSchedules error:", error);
     }
