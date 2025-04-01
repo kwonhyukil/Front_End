@@ -42,12 +42,12 @@ export const createTimetable = async (req, res) => {
       end_time,
       room,
       grade_id,
-      custom_date,
       color_code,
       schedule_type = "일반",
+      custom_date,
     } = req.body;
 
-    // 필수 필드 검증
+    // ✅ 필수 값 체크
     if (
       !course_name ||
       !professor_id ||
@@ -61,7 +61,7 @@ export const createTimetable = async (req, res) => {
       return res.status(400).json({ error: "필수 필드가 누락되었습니다." });
     }
 
-    // 충돌 체크: 일반 수업만 주차 중복 체크
+    // ✅ 중복 체크 (custom_date가 없을 경우에만 적용)
     if (!custom_date) {
       const [conflicts] = await pool.query(
         `SELECT * FROM timetables
@@ -79,10 +79,9 @@ export const createTimetable = async (req, res) => {
       }
     }
 
-    // 삽입
     await pool.query(
       `INSERT INTO timetables 
-        (course_name, professor_id, professor_name, day_of_week, start_time, end_time, room, grade_id, custom_date, color_code, schedule_type)
+       (course_name, professor_id, professor_name, day_of_week, start_time, end_time, room, grade_id, custom_date, color_code, schedule_type)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         course_name,
@@ -94,7 +93,7 @@ export const createTimetable = async (req, res) => {
         room,
         grade_id,
         custom_date || null,
-        color_code || null,
+        color_code || "#cfe9ff",
         schedule_type,
       ]
     );

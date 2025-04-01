@@ -2,14 +2,12 @@
   <div class="schedule-viewer container">
     <h2>학년별 시간표</h2>
 
-    <!-- 학년 선택 -->
     <div class="grade-select">
       <button :class="{ active: selectedGrade === '1' }" @click="changeGrade('1')">1학년</button>
       <button :class="{ active: selectedGrade === '2' }" @click="changeGrade('2')">2학년</button>
       <button :class="{ active: selectedGrade === '3' }" @click="changeGrade('3')">3학년</button>
     </div>
 
-    <!-- 주차 선택 -->
     <div class="week-select">
       <label>주차 선택:</label>
       <select v-model="selectedWeek" @change="loadData">
@@ -17,38 +15,38 @@
       </select>
     </div>
 
-    <!-- 주차 날짜 표시 -->
     <div class="week-range">
       <p>{{ selectedWeek }}주차 ({{ weekRange.start }} ~ {{ weekRange.end }})</p>
     </div>
 
-    <!-- 시간표 출력 -->
     <div class="timetable">
       <table class="time-table">
         <thead>
           <tr>
             <th class="time-col">교시 / 시간</th>
-            <th v-for="(d, idx) in weekRange.dates" :key="idx">{{ d.day }}<br>{{ d.date }}</th>
+            <th v-for="d in weekRange.dates" :key="d.day">
+              {{ d.day }}<br />{{ d.date }}
+            </th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="hour in hours" :key="hour">
             <td class="hour-cell">{{ hour }}:00 ~ {{ hour + 1 }}:00</td>
             <td
-              v-for="(d) in weekRange.dates"
-              :key="d.date"
+              v-for="d in weekRange.dates"
+              :key="d.day"
               class="schedule-cell"
-              @click="cellClick(d.day, hour, d.date)"
+              @click="cellClick(d.day, hour)"
+              @mouseenter="onCellEnter(d.day, hour, $event)"
+              @mouseleave="onCellLeave"
             >
               <div
                 v-for="(item, i) in getClasses(d.day, hour, d.date)"
                 :key="i"
                 class="class-box"
-                :style="{ backgroundColor: getColor(item) }"
               >
-                <strong>{{ getPrefix(item.schedule_type) }}{{ item.course_name }}</strong><br />
-                교수: {{ item.professor_name || '미지정' }}<br />
-                {{ item.room }}
+                <div class="class-title">{{ item.course_name }}</div>
+                <div class="class-room">({{ item.room }})</div>
               </div>
             </td>
           </tr>
@@ -56,53 +54,65 @@
       </table>
     </div>
 
-    <!-- 모달 -->
     <TimetableModal
       v-if="showModal && canEdit"
       :day="selectedDay"
       :hour="selectedHour"
       :grade="selectedGrade"
-      :date="selectedDate"
       @close="showModal = false"
       @created="handleCreated"
     />
+
+    <div
+      v-if="tooltip.visible"
+      class="tooltip-box"
+      :style="{ top: tooltip.top + 'px', left: tooltip.left + 'px' }"
+      @mouseenter="cancelTooltipHide"
+      @mouseleave="hideTooltipWithDelay"
+    >
+      <div v-for="cls in tooltip.classes" :key="cls.id" class="tooltip-class">
+        <strong>{{ cls.course_name }}</strong><br />
+        교수: {{ cls.professor_name }}<br />
+        시간: {{ cls.start_time }} ~ {{ cls.end_time }}<br />
+        요일: {{ cls.day_of_week }}<br />
+        교실: {{ cls.room }}<br />
+        유형: {{ cls.schedule_type }}
+        <div class="tooltip-actions">
+          <button @click="editClass(cls)">수정</button>
+          <button @click="deleteClass(cls.id)">삭제</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue';
-import { useTimetableStore } from '../../store/timetableStore.js';
-import { useAuthStore } from '../../store/authStore.js';
+import { ref, computed, onMounted } from 'vue';
+import { useTimetableStore } from '../../store/timetableStore';
+import { useAuthStore } from '../../store/authStore';
 import TimetableModal from './TimetableModal.vue';
 
 const store = useTimetableStore();
 const auth = useAuthStore();
 
-const days = ['월', '화', '수', '목', '금', '토'];
-const hours = [9,10,11,12,13,14,15,16,17,18];
-
 const selectedGrade = ref('1');
 const selectedWeek = ref(1);
 const selectedDay = ref('월');
 const selectedHour = ref(9);
-const selectedDate = ref('');
 const showModal = ref(false);
-
 const canEdit = computed(() => auth.isAdmin || auth.isProfessor);
 
-// 학기 시작일
+const days = ['월', '화', '수', '목', '금', '토'];
+const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
+
 const semesterStart = new Date('2025-03-03');
 
-// 주차 날짜 계산
 const getWeekRange = (weekNumber) => {
   const start = new Date(semesterStart);
   start.setDate(start.getDate() + (weekNumber - 1) * 7);
   const end = new Date(start);
-  end.setDate(end.getDate() + 5); // 월~토
-
-  const format = (date) => date.toISOString().split('T')[0];
-  const daysKor = ['월','화','수','목','금','토','일'];
-
+  end.setDate(start.getDate() + 5);
+  const format = (d) => d.toISOString().split('T')[0];
   return {
     start: format(start),
     end: format(end),
@@ -111,7 +121,7 @@ const getWeekRange = (weekNumber) => {
       d.setDate(start.getDate() + i);
       return {
         date: format(d),
-        day: daysKor[i],
+        day: days[i],
       };
     }),
   };
@@ -119,64 +129,78 @@ const getWeekRange = (weekNumber) => {
 
 const weekRange = ref(getWeekRange(selectedWeek.value));
 
-// 수업 필터링
-const formatDate = (date) => new Date(date).toISOString().split('T')[0];
-
 const getClasses = (day, hour, date) => {
-  const currentDate = formatDate(date);
-  return store.timetables.filter(item => {
-    if (Number(selectedGrade.value) !== item.grade_id) return false;
-
+  return store.timetables.filter((item) => {
+    if (Number(item.grade_id) !== Number(selectedGrade.value)) return false;
     const [startH] = item.start_time.split(':').map(Number);
     const [endH] = item.end_time.split(':').map(Number);
-    if (hour < startH || hour >= endH) return false;
-
+    const inHour = hour >= startH && hour < endH;
     if (item.custom_date) {
-      return formatDate(item.custom_date) === currentDate;
+      const itemDate = new Date(item.custom_date).toISOString().split('T')[0];
+      return itemDate === date && inHour;
+    } else {
+      return item.day_of_week === day && inHour;
     }
-
-    return item.day_of_week === day;
   });
 };
 
-// 학년 변경
+const tooltip = ref({ visible: false, classes: [], top: 0, left: 0 });
+let hideTimeout = null;
+
+const onCellEnter = (day, hour, event) => {
+  const date = weekRange.value.dates.find((d) => d.day === day)?.date;
+  const classes = getClasses(day, hour, date);
+  if (classes.length === 0) return;
+  if (hideTimeout) clearTimeout(hideTimeout);
+  const rect = event.currentTarget.getBoundingClientRect();
+  tooltip.value = {
+    visible: true,
+    classes,
+    top: rect.top + window.scrollY,
+    left: rect.right,
+  };
+};
+const onCellLeave = () => {
+  hideTimeout = setTimeout(() => {
+    tooltip.value.visible = false;
+  }, 1500);
+};
+const cancelTooltipHide = () => {
+  if (hideTimeout) clearTimeout(hideTimeout);
+};
+const hideTooltipWithDelay = () => {
+  hideTimeout = setTimeout(() => {
+    tooltip.value.visible = false;
+  }, 1500);
+};
+
 const changeGrade = (g) => {
   selectedGrade.value = g;
   loadData();
 };
-
-// 셀 클릭
-const cellClick = (day, hour, date) => {
+const cellClick = (day, hour) => {
   if (!canEdit.value) return;
   selectedDay.value = day;
   selectedHour.value = hour;
-  selectedDate.value = date;
   showModal.value = true;
 };
-
-// 등록 후 재로드
 const handleCreated = () => {
   showModal.value = false;
   loadData();
 };
 
-// 배경색
-const getColor = (item) => {
-  if (item.schedule_type === '휴강') return '#ff4d4f';
-  if (item.schedule_type === '보강') return '#ffe58f';
-  if (item.schedule_type === '특강') return '#d9f7be';
-  return item.color_code || '#cfe9ff';
+const editClass = (cls) => {
+  alert(`[수정 기능 준비 중] 수업 ID: ${cls.id}`);
+};
+const deleteClass = async (id) => {
+  try {
+    await store.deleteTimetable(auth.token, id);
+    loadData();
+  } catch (e) {
+    alert('삭제 실패: ' + e.message);
+  }
 };
 
-// 수업명 앞에 태그
-const getPrefix = (type) => {
-  if (type === '휴강') return '[휴강] ';
-  if (type === '보강') return '[보강] ';
-  if (type === '특강') return '[특강] ';
-  return '';
-};
-
-// 데이터 불러오기
 const loadData = async () => {
   await store.loadAllTimetables(selectedGrade.value);
   weekRange.value = getWeekRange(selectedWeek.value);
@@ -190,62 +214,132 @@ onMounted(loadData);
   background: #fff;
   padding: 20px;
   border-radius: 8px;
+  font-family: 'Arial', sans-serif;
 }
+
+/* 학년 선택 */
 .grade-select {
-  margin-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 20px;
 }
 .grade-select button {
-  margin-right: 6px;
-  padding: 6px 12px;
+  margin: 0 10px;
+  padding: 8px 16px;
   border: none;
-  border-radius: 4px;
-  background: #ccc;
+  border-radius: 20px;
+  background: #e0e0e0;
   cursor: pointer;
+  font-size: 14px;
 }
 .grade-select button.active {
-  background: #28a745;
-  color: #fff;
+  background: #007bff;
+  color: white;
 }
+
+/* 주차 선택 */
 .week-select {
-  margin-bottom: 8px;
+  text-align: center;
+  margin-bottom: 10px;
 }
+.week-select label {
+  font-size: 14px;
+  margin-right: 8px;
+}
+.week-select select {
+  padding: 4px 8px;
+  font-size: 14px;
+}
+
+/* 주차 정보 */
 .week-range {
+  text-align: center;
   font-weight: bold;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
+  font-size: 16px;
 }
+
+/* 시간표 테이블 */
 .time-table {
   width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 .time-col {
   width: 120px;
-  background: #f3f3f3;
+  background: #f1f1f1;
   text-align: center;
   font-weight: bold;
+  padding: 10px 0;
 }
 .hour-cell {
   text-align: center;
   border: 1px solid #e0e0e0;
+  background: #fafafa;
+  padding: 10px 0;
 }
 .schedule-cell {
   border: 1px solid #e0e0e0;
   height: 80px;
-  position: relative;
   vertical-align: top;
+  position: relative;
+  padding: 4px;
   cursor: pointer;
 }
 .schedule-cell:hover {
-  background: #f9f9f9;
+  background: #f4faff;
 }
+
+/* 수업 박스 */
 .class-box {
-  background: #cfe9ff;
-  margin: 2px;
-  padding: 4px;
-  border-radius: 4px;
-  font-size: 0.9rem;
-}
-.class-box strong {
+  padding: 6px 8px;
+  border-radius: 6px;
+  margin: 4px 0;
+  font-size: 13px;
+  background-color: #d6eaff;
   color: #333;
+  box-shadow: none;
+  border: 1px solid #c3e4ff;
+}
+.class-title {
+  font-weight: bold;
+  font-size: 13px;
+}
+.class-room {
+  font-size: 12px;
+  color: #555;
+}
+
+/* 툴팁 */
+.tooltip-box {
+  position: absolute;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 15px;
+  border-radius: 8px;
+  z-index: 1000;
+  width: 260px;
+  font-size: 14px;
+}
+.tooltip-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+}
+.tooltip-actions button {
+  padding: 6px 12px;
+  border: none;
+  background: #eee;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+.tooltip-actions button:hover {
+  background: #ddd;
 }
 </style>
