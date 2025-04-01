@@ -10,6 +10,11 @@ export const fetchUserProfile = async (token) => {
   return res.data;
 };
 
+export const fetchProfessors = async () => {
+  const res = await axios.get(`${baseURL}/user/professors`);
+  return res.data;
+};
+
 // 임시 회원가입 정보 등록
 export const saveRegistrationRequest = async (payload) => {
   // { email, name, phone, student_id, role_id, is_international }

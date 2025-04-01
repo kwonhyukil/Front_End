@@ -5,6 +5,22 @@ import pool from "../config/db.js";
  * 회원가입 정보 저장 (registrations 테이블 수정)
  * - 기존에 pending 상태가 있으면 업데이트
  */
+
+// ✅ role_id = 2 (교수) 만 조회
+export const getProfessors = async (req, res) => {
+  try {
+    console.log("📥 교수 목록 요청 들어옴");
+    const [rows] = await pool.query(
+      `SELECT id, name FROM users WHERE role_id = 2`
+    );
+    console.log("🎓 교수 목록 결과:", rows); // 👈 이거 추가
+    res.json(rows);
+  } catch (err) {
+    console.error("❌ 교수 목록 조회 오류:", err);
+    res.status(500).json({ error: "교수 목록 조회 실패" });
+  }
+};
+
 export const saveRegistration = async (req, res) => {
   try {
     const { email, name, phone, student_id, role_id, is_international } =

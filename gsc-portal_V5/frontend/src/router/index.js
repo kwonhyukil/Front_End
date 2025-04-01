@@ -6,10 +6,11 @@ import Logout from "../components/auth/Logout.vue";
 import RegistrationForm from "../components/auth/RegistrationForm.vue";
 import NoticeList from "../components/notice/NoticeList.vue";
 import NoticeDetail from "../components/notice/NoticeDetail.vue";
-import ScheduleViewer from "../components/schedule/ScheduleViewer.vue";
+// import ScheduleViewer from "../components/schedule/ScheduleViewer.vue";
 import CalendarPage from "../components/calendar/CalendarPage.vue";
 import AdminApproval from "../components/AdminApproval.vue";
 import Profile from "../components/Profile.vue";
+import Timetable from "../components/timetable/Timetable.vue";
 
 import { useAuthStore } from "../store/authStore.js";
 
@@ -21,7 +22,8 @@ const routes = [
   { path: "/registration", component: RegistrationForm },
   { path: "/notice", component: NoticeList },
   { path: "/notice/:id", component: NoticeDetail },
-  { path: "/schedule", component: ScheduleViewer },
+  { path: "/timetable", component: Timetable },
+  // { path: "/schedule", component: ScheduleViewer },
   { path: "/calendar", component: CalendarPage },
   { path: "/admin-approval", component: AdminApproval },
   { path: "/profile", component: Profile },
@@ -39,6 +41,7 @@ router.beforeEach((to, from, next) => {
     "/logout",
     "/profile",
     "/schedule",
+    "/timetable",
     "/notice",
     "/calendar",
     "/admin-approval",

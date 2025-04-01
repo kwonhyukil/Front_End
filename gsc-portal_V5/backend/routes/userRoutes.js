@@ -7,6 +7,7 @@ import {
   rejectRegistration,
   getUserProfile,
   getRegistrations,
+  getProfessors,
 } from "../controllers/userController.js";
 
 const router = Router();
@@ -23,5 +24,7 @@ router.get("/registrations", authRequired, getRegistrations);
 
 // 사용자 프로필 (승인된 사용자)
 router.get("/profile", authRequired, getUserProfile);
+
+router.get("/professors", getProfessors);
 
 export default router;

@@ -1,175 +1,251 @@
-<!-- 📄 Timetable.vue -->
 <template>
-  <div class="timetable-page">
-    <h2>학과 시간표</h2>
+  <div class="schedule-viewer container">
+    <h2>학년별 시간표</h2>
 
-    <!-- 📌 날짜 선택 (일주일 단위로 표시) -->
-    <div class="date-picker">
-      <label>날짜 선택: </label>
-      <input type="date" v-model="selectedDate" @change="onDateChange" />
+    <!-- 학년 선택 -->
+    <div class="grade-select">
+      <button :class="{ active: selectedGrade === '1' }" @click="changeGrade('1')">1학년</button>
+      <button :class="{ active: selectedGrade === '2' }" @click="changeGrade('2')">2학년</button>
+      <button :class="{ active: selectedGrade === '3' }" @click="changeGrade('3')">3학년</button>
     </div>
 
-    <!-- 📌 선택한 날짜 기준 주간 범위 표시 -->
-    <p>기간: {{ weekStart }} ~ {{ weekEnd }}</p>
-
-    <!-- 📌 학년 선택 (확장 가능) -->
-    <div class="grade-tabs">
-      <button :class="{active: activeGrade === 1}" @click="activeGrade=1">1학년</button>
-      <button :class="{active: activeGrade === 2}" @click="activeGrade=2">2학년</button>
-      <button :class="{active: activeGrade === 3}" @click="activeGrade=3">3학년</button>
+    <!-- 주차 선택 -->
+    <div class="week-select">
+      <label>주차 선택:</label>
+      <select v-model="selectedWeek" @change="loadData">
+        <option v-for="week in 16" :key="week" :value="week">{{ week }}주차</option>
+      </select>
     </div>
 
-    <!-- 📌 주간 시간표 테이블 (월~토) -->
-    <table class="calendar-table">
-      <thead>
-        <tr>
-          <th>시간\요일</th>
-          <th v-for="(day,k) in days" :key="k">{{ day }}</th>
-        </tr>
-      </thead>
-      <tbody>
-        <!-- 09:00 ~ 18:00까지 1시간 단위 -->
-        <tr v-for="hour in hours" :key="hour">
-          <td>{{ hour }}:00</td>
-          <td v-for="(day, idx) in days" :key="idx" class="cell">
-            <!-- 📌 해당 시간대의 과목 표시 -->
-            <div 
-              v-for="timeItem in getTimetable(day, hour)"
-              :key="timeItem.id"
-              :style="{ backgroundColor: timeItem.color_code || '#fff' }"
-              class="course-item"
+    <!-- 주차 날짜 표시 -->
+    <div class="week-range">
+      <p>{{ selectedWeek }}주차 ({{ weekRange.start }} ~ {{ weekRange.end }})</p>
+    </div>
+
+    <!-- 시간표 출력 -->
+    <div class="timetable">
+      <table class="time-table">
+        <thead>
+          <tr>
+            <th class="time-col">교시 / 시간</th>
+            <th v-for="(d, idx) in weekRange.dates" :key="idx">{{ d.day }}<br>{{ d.date }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="hour in hours" :key="hour">
+            <td class="hour-cell">{{ hour }}:00 ~ {{ hour + 1 }}:00</td>
+            <td
+              v-for="(d) in weekRange.dates"
+              :key="d.date"
+              class="schedule-cell"
+              @click="cellClick(d.day, hour, d.date)"
             >
-              {{ timeItem.course_name }}<br/>
-              ({{ timeItem.start_time }}~{{ timeItem.end_time }})
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+              <div
+                v-for="(item, i) in getClasses(d.day, hour, d.date)"
+                :key="i"
+                class="class-box"
+                :style="{ backgroundColor: getColor(item) }"
+              >
+                <strong>{{ getPrefix(item.schedule_type) }}{{ item.course_name }}</strong><br />
+                교수: {{ item.professor_name || '미지정' }}<br />
+                {{ item.room }}
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 모달 -->
+    <TimetableModal
+      v-if="showModal && canEdit"
+      :day="selectedDay"
+      :hour="selectedHour"
+      :grade="selectedGrade"
+      :date="selectedDate"
+      @close="showModal = false"
+      @created="handleCreated"
+    />
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from "vue";
-import { useTimetableStore } from "../../store/timetableStore.js";
+<script setup>
+import { ref, onMounted, computed } from 'vue';
+import { useTimetableStore } from '../../store/timetableStore.js';
+import { useAuthStore } from '../../store/authStore.js';
+import TimetableModal from './TimetableModal.vue';
 
-export default {
-  name: "Timetable",
-  setup() {
-      const store = useTimetableStore(); // 시간표 스토어 사용
+const store = useTimetableStore();
+const auth = useAuthStore();
 
-      const selectedDate = ref(""); // 선택한 날짜
-      const activeGrade = ref(1);  // 학년 선택 (기본값: 1학년)
-      const weekStart = ref(""); // 주간 시작일
-      const weekEnd = ref(""); // 주간 종료일
+const days = ['월', '화', '수', '목', '금', '토'];
+const hours = [9,10,11,12,13,14,15,16,17,18];
 
-      const days = ["월", "화", "수", "목", "금", "토"]; // 요일 목록
-      const hours = [9,10,11,12,13,14,15,16,17,18]; // 9시~18시 (시간표 표시)
+const selectedGrade = ref('1');
+const selectedWeek = ref(1);
+const selectedDay = ref('월');
+const selectedHour = ref(9);
+const selectedDate = ref('');
+const showModal = ref(false);
 
-      /**
-       * 📌 컴포넌트 마운트 시 실행
-       * - 전체 시간표 데이터를 불러오고, 기본 날짜를 설정
-       */
-      onMounted(async () => {
-          await store.loadAllTimetables(); // 전체 시간표 데이터 로드
-          const now = new Date();
-          selectedDate.value = now.toISOString().split("T")[0]; // 오늘 날짜 설정
-          calcWeekRange(selectedDate.value); // 주간 범위 계산
-      });
+const canEdit = computed(() => auth.isAdmin || auth.isProfessor);
 
-      /**
-       * 📌 날짜 변경 시 실행
-       * - 새로운 주간 범위를 계산
-       */
-      const onDateChange = () => {
-          calcWeekRange(selectedDate.value);
-      };
+// 학기 시작일
+const semesterStart = new Date('2025-03-03');
 
-      /**
-       * 📌 주간 범위 계산
-       * - 선택한 날짜를 기준으로 해당 주의 월~일 범위를 계산
-       */
-      const calcWeekRange = (dateStr) => {
-          const d = new Date(dateStr);
-          const dayOfWeek = d.getDay(); // 요일 (0: 일요일 ~ 6: 토요일)
-          const monDiff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 월요일까지 거리
-          const start = new Date(d.getTime() - monDiff * 24 * 60 * 60 * 1000); // 월요일
-          const end = new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000); // 일요일
+// 주차 날짜 계산
+const getWeekRange = (weekNumber) => {
+  const start = new Date(semesterStart);
+  start.setDate(start.getDate() + (weekNumber - 1) * 7);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 5); // 월~토
 
-          // yyyy-mm-dd 포맷으로 변환
-          const fmt = (val) => {
-              const year = val.getFullYear();
-              const month = ("0" + (val.getMonth() + 1)).slice(-2);
-              const day = ("0" + val.getDate()).slice(-2);
-              return `${year}-${month}-${day}`;
-          };
+  const format = (date) => date.toISOString().split('T')[0];
+  const daysKor = ['월','화','수','목','금','토','일'];
 
-          weekStart.value = fmt(start);
-          weekEnd.value = fmt(end);
-      };
-
-      /**
-       * 📌 시간표 데이터 필터링
-       * - 요일과 시간대를 기준으로 해당하는 과목만 필터링
-       */
-      const getTimetable = (day, hour) => {
-          return store.timetables.filter(item => {
-              if (item.day_of_week !== day) return false;
-              if (item.custom_date && item.custom_date !== selectedDate.value) return false; // 특정 날짜에만 적용되는 과목 처리
-              const startH = parseInt(item.start_time.split(":")[0]);
-              const endH = parseInt(item.end_time.split(":")[0]);
-              return hour >= startH && hour < endH;
-          });
-      };
-
+  return {
+    start: format(start),
+    end: format(end),
+    dates: Array.from({ length: 6 }, (_, i) => {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
       return {
-          selectedDate,
-          weekStart,
-          weekEnd,
-          activeGrade,
-          days,
-          hours,
-          onDateChange,
-          getTimetable,
+        date: format(d),
+        day: daysKor[i],
       };
-  },
+    }),
+  };
 };
+
+const weekRange = ref(getWeekRange(selectedWeek.value));
+
+// 수업 필터링
+const formatDate = (date) => new Date(date).toISOString().split('T')[0];
+
+const getClasses = (day, hour, date) => {
+  const currentDate = formatDate(date);
+  return store.timetables.filter(item => {
+    if (Number(selectedGrade.value) !== item.grade_id) return false;
+
+    const [startH] = item.start_time.split(':').map(Number);
+    const [endH] = item.end_time.split(':').map(Number);
+    if (hour < startH || hour >= endH) return false;
+
+    if (item.custom_date) {
+      return formatDate(item.custom_date) === currentDate;
+    }
+
+    return item.day_of_week === day;
+  });
+};
+
+// 학년 변경
+const changeGrade = (g) => {
+  selectedGrade.value = g;
+  loadData();
+};
+
+// 셀 클릭
+const cellClick = (day, hour, date) => {
+  if (!canEdit.value) return;
+  selectedDay.value = day;
+  selectedHour.value = hour;
+  selectedDate.value = date;
+  showModal.value = true;
+};
+
+// 등록 후 재로드
+const handleCreated = () => {
+  showModal.value = false;
+  loadData();
+};
+
+// 배경색
+const getColor = (item) => {
+  if (item.schedule_type === '휴강') return '#ff4d4f';
+  if (item.schedule_type === '보강') return '#ffe58f';
+  if (item.schedule_type === '특강') return '#d9f7be';
+  return item.color_code || '#cfe9ff';
+};
+
+// 수업명 앞에 태그
+const getPrefix = (type) => {
+  if (type === '휴강') return '[휴강] ';
+  if (type === '보강') return '[보강] ';
+  if (type === '특강') return '[특강] ';
+  return '';
+};
+
+// 데이터 불러오기
+const loadData = async () => {
+  await store.loadAllTimetables(selectedGrade.value);
+  weekRange.value = getWeekRange(selectedWeek.value);
+};
+
+onMounted(loadData);
 </script>
 
 <style scoped>
-.timetable-page {
-  margin: 20px;
+.schedule-viewer {
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
 }
-.date-picker {
+.grade-select {
   margin-bottom: 10px;
 }
-.grade-tabs {
-  margin: 10px 0;
-}
-.grade-tabs button {
-  margin-right: 5px;
+.grade-select button {
+  margin-right: 6px;
   padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  background: #ccc;
   cursor: pointer;
 }
-.grade-tabs .active {
-  background: #007bff;
+.grade-select button.active {
+  background: #28a745;
   color: #fff;
 }
-.calendar-table {
+.week-select {
+  margin-bottom: 8px;
+}
+.week-range {
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+.time-table {
   width: 100%;
   border-collapse: collapse;
+  table-layout: fixed;
 }
-.calendar-table th, .calendar-table td {
-  border: 1px solid #ccc;
-  padding: 8px;
+.time-col {
+  width: 120px;
+  background: #f3f3f3;
+  text-align: center;
+  font-weight: bold;
+}
+.hour-cell {
+  text-align: center;
+  border: 1px solid #e0e0e0;
+}
+.schedule-cell {
+  border: 1px solid #e0e0e0;
+  height: 80px;
+  position: relative;
   vertical-align: top;
-  width: 14%;
+  cursor: pointer;
 }
-.course-item {
-  border: 1px solid #999;
-  margin: 4px 0;
+.schedule-cell:hover {
+  background: #f9f9f9;
+}
+.class-box {
+  background: #cfe9ff;
+  margin: 2px;
   padding: 4px;
   border-radius: 4px;
   font-size: 0.9rem;
+}
+.class-box strong {
+  color: #333;
 }
 </style>

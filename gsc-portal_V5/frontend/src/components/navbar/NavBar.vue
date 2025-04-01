@@ -5,7 +5,7 @@
     <nav>
       <ul class="nav-links">
         <li><router-link to="/home">홈</router-link></li>
-        <li><router-link to="/schedule">시간표</router-link></li>
+        <li><router-link to="/timetable">시간표</router-link></li>
         <li><router-link to="/notice">공지사항</router-link></li>
         <li><router-link to="/calendar">학과 행사</router-link></li>
         <li v-if="authStore.isAdmin || authStore.isProfessor">

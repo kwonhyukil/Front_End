@@ -1,28 +1,30 @@
-// 📄 timetableStore.js
-/*
-  Pinia 스토어: 시간표 정보 저장
-*/
+// 📁 src/store/timetableStore.js
 import { defineStore } from "pinia";
-import { ref } from "vue";
-import { fetchAllTimetables } from "../api/timetable.js";
+import axios from "axios";
 
-/**
- * 시간표 정보를 전역에서 관리
- */
-export const useTimetableStore = defineStore("timetable", () => {
-  const timetables = ref([]);
+const baseURL = import.meta.env.VITE_API_URL;
 
-  // 전체 시간표 로드
-  const loadAllTimetables = async () => {
-    try {
-      timetables.value = await fetchAllTimetables();
-    } catch (error) {
-      console.error("시간표 로드 실패:", error);
-    }
-  };
+export const useTimetableStore = defineStore("timetable", {
+  state: () => ({
+    timetables: [],
+  }),
+  actions: {
+    async loadAllTimetables(grade = "all", weekStart, weekEnd) {
+      try {
+        const res = await axios.get(`${baseURL}/timetables`, {
+          params: { grade, week_start: weekStart, week_end: weekEnd },
+        });
+        this.timetables = res.data;
+      } catch (err) {
+        console.error("시간표 불러오기 실패", err);
+      }
+    },
 
-  return {
-    timetables,
-    loadAllTimetables,
-  };
+    async createTimetable(token, payload, grade = "1", weekStart, weekEnd) {
+      await axios.post(`${baseURL}/timetables`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      await this.loadAllTimetables(grade, weekStart, weekEnd);
+    },
+  },
 });
