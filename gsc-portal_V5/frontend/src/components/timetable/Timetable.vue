@@ -2,12 +2,14 @@
   <div class="schedule-viewer container">
     <h2>학년별 시간표</h2>
 
+    <!-- ✅ 학년 선택 -->
     <div class="grade-select">
-      <button :class="{ active: selectedGrade === '1' }" @click="changeGrade('1')">1학년</button>
-      <button :class="{ active: selectedGrade === '2' }" @click="changeGrade('2')">2학년</button>
-      <button :class="{ active: selectedGrade === '3' }" @click="changeGrade('3')">3학년</button>
+      <button :class="{active: selectedGrade === '1'}" @click="changeGrade('1')">1학년</button>
+      <button :class="{active: selectedGrade === '2'}" @click="changeGrade('2')">2학년</button>
+      <button :class="{active: selectedGrade === '3'}" @click="changeGrade('3')">3학년</button>
     </div>
 
+    <!-- ✅ 주차 선택 -->
     <div class="week-select">
       <label>주차 선택:</label>
       <select v-model="selectedWeek" @change="loadData">
@@ -15,17 +17,19 @@
       </select>
     </div>
 
+    <!-- ✅ 날짜 범위 -->
     <div class="week-range">
       <p>{{ selectedWeek }}주차 ({{ weekRange.start }} ~ {{ weekRange.end }})</p>
     </div>
 
+    <!-- ✅ 시간표 테이블 -->
     <div class="timetable">
       <table class="time-table">
         <thead>
           <tr>
             <th class="time-col">교시 / 시간</th>
             <th v-for="d in weekRange.dates" :key="d.day">
-              {{ d.day }}<br />{{ d.date }}
+              {{ d.day }}<br>{{ d.date }}
             </th>
           </tr>
         </thead>
@@ -44,9 +48,10 @@
                 v-for="(item, i) in getClasses(d.day, hour, d.date)"
                 :key="i"
                 class="class-box"
+                :style="{ backgroundColor: item.color_code || '#cfe9ff' }"
               >
-                <div class="class-title">{{ item.course_name }}</div>
-                <div class="class-room">({{ item.room }})</div>
+                <strong>{{ item.course_name }}</strong><br />
+                {{ item.room }} / {{ item.professor_name }}
               </div>
             </td>
           </tr>
@@ -54,15 +59,19 @@
       </table>
     </div>
 
+    <!-- ✅ 등록 / 수정 모달 -->
     <TimetableModal
       v-if="showModal && canEdit"
       :day="selectedDay"
       :hour="selectedHour"
       :grade="selectedGrade"
-      @close="showModal = false"
+      :scheduleToEdit="scheduleToEdit"
+      @close="onModalClose"
       @created="handleCreated"
     />
 
+
+    <!-- ✅ 툴팁 -->
     <div
       v-if="tooltip.visible"
       class="tooltip-box"
@@ -74,7 +83,6 @@
         <strong>{{ cls.course_name }}</strong><br />
         교수: {{ cls.professor_name }}<br />
         시간: {{ cls.start_time }} ~ {{ cls.end_time }}<br />
-        요일: {{ cls.day_of_week }}<br />
         교실: {{ cls.room }}<br />
         유형: {{ cls.schedule_type }}
         <div class="tooltip-actions">
@@ -85,6 +93,7 @@
     </div>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
@@ -100,16 +109,17 @@ const selectedWeek = ref(1);
 const selectedDay = ref('월');
 const selectedHour = ref(9);
 const showModal = ref(false);
+const scheduleToEdit = ref(null);
+
 const canEdit = computed(() => auth.isAdmin || auth.isProfessor);
-
-const days = ['월', '화', '수', '목', '금', '토'];
-const hours = [9, 10, 11, 12, 13, 14, 15, 16, 17, 18];
-
+const days = ['월','화','수','목','금','토'];
+const hours = [9,10,11,12,13,14,15,16,17,18];
 const semesterStart = new Date('2025-03-03');
 
-const getWeekRange = (weekNumber) => {
+// ✅ 주차 계산
+const getWeekRange = (week) => {
   const start = new Date(semesterStart);
-  start.setDate(start.getDate() + (weekNumber - 1) * 7);
+  start.setDate(start.getDate() + (week - 1) * 7);
   const end = new Date(start);
   end.setDate(start.getDate() + 5);
   const format = (d) => d.toISOString().split('T')[0];
@@ -117,49 +127,52 @@ const getWeekRange = (weekNumber) => {
     start: format(start),
     end: format(end),
     dates: Array.from({ length: 6 }, (_, i) => {
-      const d = new Date(start);
-      d.setDate(start.getDate() + i);
+      const date = new Date(start);
+      date.setDate(start.getDate() + i);
       return {
-        date: format(d),
         day: days[i],
+        date: format(date)
       };
-    }),
+    })
   };
 };
-
 const weekRange = ref(getWeekRange(selectedWeek.value));
 
+// ✅ 시간표 필터
 const getClasses = (day, hour, date) => {
-  return store.timetables.filter((item) => {
+  return store.timetables.filter(item => {
     if (Number(item.grade_id) !== Number(selectedGrade.value)) return false;
-    const [startH] = item.start_time.split(':').map(Number);
-    const [endH] = item.end_time.split(':').map(Number);
-    const inHour = hour >= startH && hour < endH;
+    const [sh] = item.start_time.split(':').map(Number);
+    const [eh] = item.end_time.split(':').map(Number);
+    const inHour = hour >= sh && hour < eh;
+
     if (item.custom_date) {
-      const itemDate = new Date(item.custom_date).toISOString().split('T')[0];
-      return itemDate === date && inHour;
+      return new Date(item.custom_date).toISOString().split('T')[0] === date && inHour;
     } else {
       return item.day_of_week === day && inHour;
     }
   });
 };
 
+// ✅ 툴팁
 const tooltip = ref({ visible: false, classes: [], top: 0, left: 0 });
-let hideTimeout = null;
+let hideTimeout = 2000;
 
 const onCellEnter = (day, hour, event) => {
-  const date = weekRange.value.dates.find((d) => d.day === day)?.date;
+  const date = weekRange.value.dates.find(d => d.day === day)?.date;
   const classes = getClasses(day, hour, date);
   if (classes.length === 0) return;
   if (hideTimeout) clearTimeout(hideTimeout);
+
   const rect = event.currentTarget.getBoundingClientRect();
   tooltip.value = {
     visible: true,
     classes,
     top: rect.top + window.scrollY,
-    left: rect.right,
+    left: rect.right
   };
 };
+
 const onCellLeave = () => {
   hideTimeout = setTimeout(() => {
     tooltip.value.visible = false;
@@ -174,23 +187,19 @@ const hideTooltipWithDelay = () => {
   }, 1500);
 };
 
-const changeGrade = (g) => {
-  selectedGrade.value = g;
-  loadData();
-};
+// ✅ 등록/수정 모달 핸들러
 const cellClick = (day, hour) => {
   if (!canEdit.value) return;
   selectedDay.value = day;
   selectedHour.value = hour;
+  scheduleToEdit.value = null; // 등록 모드
   showModal.value = true;
 };
-const handleCreated = () => {
-  showModal.value = false;
-  loadData();
-};
-
 const editClass = (cls) => {
-  alert(`[수정 기능 준비 중] 수업 ID: ${cls.id}`);
+  scheduleToEdit.value = { ...cls };
+  selectedDay.value = cls.day_of_week;
+  selectedHour.value = parseInt(cls.start_time.split(':')[0]);
+  showModal.value = true;
 };
 const deleteClass = async (id) => {
   try {
@@ -200,7 +209,19 @@ const deleteClass = async (id) => {
     alert('삭제 실패: ' + e.message);
   }
 };
-
+const onModalClose = () => {
+  showModal.value = false;
+  scheduleToEdit.value = null;
+};
+const handleCreated = () => {
+  showModal.value = false;
+  scheduleToEdit.value = null;
+  loadData();
+};
+const changeGrade = (g) => {
+  selectedGrade.value = g;
+  loadData();
+};
 const loadData = async () => {
   await store.loadAllTimetables(selectedGrade.value);
   weekRange.value = getWeekRange(selectedWeek.value);
@@ -284,7 +305,8 @@ onMounted(loadData);
 }
 .schedule-cell {
   border: 1px solid #e0e0e0;
-  height: 80px;
+  height: 90px;
+  overflow-y: auto;
   vertical-align: top;
   position: relative;
   padding: 4px;
@@ -296,22 +318,35 @@ onMounted(loadData);
 
 /* 수업 박스 */
 .class-box {
-  padding: 6px 8px;
-  border-radius: 6px;
-  margin: 4px 0;
-  font-size: 13px;
-  background-color: #d6eaff;
-  color: #333;
-  box-shadow: none;
-  border: 1px solid #c3e4ff;
-}
-.class-title {
+  max-height: 100%;
+  overflow: hidden;
+  padding: 2px 4px;
+  margin: 2px 0;
+  border-radius: 4px;
+  font-size: 0.85rem;
   font-weight: bold;
-  font-size: 13px;
+  color: #333;
 }
-.class-room {
-  font-size: 12px;
-  color: #555;
+
+/* 🟦 일반 수업 */
+.일반 {
+  background-color: #cfe9ff;
+}
+
+/* ⚪ 휴강 */
+.휴강 {
+  background-color: #dddddd;
+  text-decoration: line-through; /* 휴강은 취소선도 가능 */
+}
+
+/* 🟩 보강 */
+.보강 {
+  background-color: #b4f0b4;
+}
+
+/* 🟪 특강 */
+.특강 {
+  background-color: #e0c6ff;
 }
 
 /* 툴팁 */

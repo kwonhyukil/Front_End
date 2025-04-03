@@ -1,8 +1,7 @@
-
 <template>
   <div class="modal-overlay" @click.self="closeModal">
     <div class="modal-content schedule-modal">
-      <h3>시간표 등록</h3>
+      <h3>{{ isEditMode ? '수업 수정' : '시간표 등록' }}</h3>
 
       <label>요일</label>
       <select v-model="dayOfWeek">
@@ -29,96 +28,99 @@
       <label>강의실</label>
       <input v-model="room" />
 
+      <label>유형</label>
+      <select v-model="scheduleType">
+        <option value="일반">일반</option>
+        <option value="휴강">휴강</option>
+        <option value="보강">보강</option>
+        <option value="특강">특강</option>
+      </select>
+
+      <label>날짜 (선택 시 해당 날짜만 적용)</label>
+      <input type="date" v-model="customDate" />
+
       <label>색상</label>
       <input type="color" v-model="colorCode" />
 
-      <label>수업 유형</label>
-      <select v-model="scheduleType">
-        <option>일반</option>
-        <option>보강</option>
-        <option>휴강</option>
-        <option>특강</option>
-      </select>
-
       <div class="button-group">
-        <button @click="submitForm">등록</button>
+        <button @click="submitForm">{{ isEditMode ? '수정' : '등록' }}</button>
         <button @click="closeModal">취소</button>
       </div>
     </div>
   </div>
 </template>
 
+
 <script setup>
-import { ref, onMounted } from "vue";
-import { useAuthStore } from "../../store/authStore.js";
-import { useTimetableStore } from "../../store/timetableStore.js";
-import { fetchProfessors } from "../../api/user.js";
+import { ref, onMounted, computed } from 'vue';
+import { useAuthStore } from '../../store/authStore.js';
+import { useTimetableStore } from '../../store/timetableStore.js';
+import { fetchProfessors } from '../../api/user.js';
 
-const props = defineProps(["day", "hour", "grade", "week"]);
-const emit = defineEmits(["close", "created"]);
+const props = defineProps(['day', 'hour', 'grade', 'scheduleToEdit']);
+const emit = defineEmits(['close', 'created']);
 
-const courseName = ref("");
-const professorId = ref("");
-const room = ref("");
-const dayOfWeek = ref(props.day || "월");
-const startTime = ref("");
-const endTime = ref("");
-const colorCode = ref("#cfe9ff");
-const scheduleType = ref("일반");
-const gradeId = ref(props.grade || "1");
+const days = ['월','화','수','목','금','토'];
+const courseName = ref('');
+const professorId = ref('');
+const room = ref('');
+const dayOfWeek = ref('');
+const startTime = ref('');
+const endTime = ref('');
+const colorCode = ref('#cfe9ff');
+const gradeId = ref('1');
+const customDate = ref('');
+const scheduleType = ref('일반');
 
-const professors = ref([]);
-const auth = useAuthStore();
 const store = useTimetableStore();
+const auth = useAuthStore();
+const professors = ref([]);
 
-const days = ["월", "화", "수", "목", "금", "토"];
+const isEditMode = computed(() => !!props.scheduleToEdit);
 
-function calculateDateByWeekAndDay(weekNumber, dayOfWeek) {
-  const days = ["월", "화", "수", "목", "금", "토"];
-  const start = new Date("2025-03-03");
-  const dayOffset = days.indexOf(dayOfWeek);
-  if (dayOffset === -1) throw new Error("Invalid dayOfWeek");
-  const date = new Date(start);
-  date.setDate(date.getDate() + (weekNumber - 1) * 7 + dayOffset);
-  return date.toISOString().split("T")[0];
-}
-
-const getProfessorNameById = (id) => {
-  const found = professors.value.find((p) => p.id === Number(id));
-  return found?.name || "";
-};
-
+// ✅ 초기값 세팅
 onMounted(async () => {
+  if (props.day) dayOfWeek.value = props.day;
   if (props.hour) {
-    const h = String(props.hour).padStart(2, "0");
-    startTime.value = `${h}:00`;
-    endTime.value = `${String(props.hour + 1).padStart(2, "0")}:00`;
+    const hh = String(props.hour).padStart(2, '0');
+    startTime.value = `${hh}:00`;
+    endTime.value = `${String(props.hour + 1).padStart(2, '0')}:00`;
+  }
+  if (props.grade) gradeId.value = String(props.grade);
+
+  if (props.scheduleToEdit) {
+    const s = props.scheduleToEdit;
+    courseName.value = s.course_name;
+    professorId.value = s.professor_id;
+    room.value = s.room;
+    dayOfWeek.value = s.day_of_week;
+    startTime.value = s.start_time;
+    endTime.value = s.end_time;
+    gradeId.value = String(s.grade_id);
+    customDate.value = s.custom_date?.split('T')[0] || '';
+    colorCode.value = s.color_code || '#cfe9ff';
+    scheduleType.value = s.schedule_type || '일반';
   }
 
   try {
     professors.value = await fetchProfessors();
   } catch (err) {
-    console.error("❌ 교수 목록 로딩 실패", err);
-    alert("교수 목록을 불러오는 데 실패했습니다.");
+    console.error('교수 목록 로딩 실패 ❌', err);
+    alert('교수 목록 불러오기 실패');
   }
 });
 
+const getProfessorNameById = (id) => {
+  const found = professors.value.find(p => p.id === Number(id));
+  return found?.name || '';
+};
+
+// ✅ 등록/수정 처리
 const submitForm = async () => {
   try {
     if (!courseName.value || !professorId.value || !room.value) {
-      alert("모든 필드를 입력해주세요.");
+      alert('필수 항목을 모두 입력하세요.');
       return;
-    }
-
-    let customDate = null;
-    const weekNumber = Number(props.week || "1");
-
-    if (scheduleType.value !== "일반") {
-      if (!["월", "화", "수", "목", "금", "토"].includes(dayOfWeek.value)) {
-        alert("요일 값이 유효하지 않습니다.");
-        return;
-      }
-      customDate = calculateDateByWeekAndDay(weekNumber, dayOfWeek.value);
     }
 
     const payload = {
@@ -130,21 +132,25 @@ const submitForm = async () => {
       end_time: endTime.value,
       room: room.value,
       grade_id: Number(gradeId.value),
+      custom_date: customDate.value || null,
       color_code: colorCode.value,
       schedule_type: scheduleType.value,
-      custom_date: customDate,
     };
 
-    console.log("🚀 등록 payload:", payload);
-    await store.createTimetable(auth.token, payload, gradeId.value);
-    emit("created");
+    if (isEditMode.value) {
+      await store.updateTimetable(auth.token, props.scheduleToEdit.id, payload, gradeId.value);
+    } else {
+      await store.createTimetable(auth.token, payload, gradeId.value);
+    }
+
+    emit('created');
   } catch (e) {
-    console.error("❌ 등록 실패", e);
-    alert("등록 실패: " + (e.response?.data?.error || e.message));
+    console.error('❌ 저장 실패', e);
+    alert('저장 실패: ' + (e.response?.data?.error || e.message));
   }
 };
 
-const closeModal = () => emit("close");
+const closeModal = () => emit('close');
 </script>
 
 <style scoped>

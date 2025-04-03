@@ -8,22 +8,34 @@ const ORDER_BY_DAY = `FIELD(day_of_week, '월','화','수','목','금','토')`;
  */
 export const getAllTimetables = async (req, res) => {
   try {
-    const { grade } = req.query;
-    let sql = `SELECT * FROM timetables`;
+    const { grade, week_start, week_end } = req.query;
+    let sql = `SELECT * FROM timetables WHERE 1=1`;
     const params = [];
 
+    // ✅ 학년 필터
     if (grade && grade !== "all") {
-      sql += " WHERE grade_id = ?";
+      sql += ` AND grade_id = ?`;
       params.push(Number(grade));
+    }
+
+    // ✅ 커스텀 날짜가 있을 경우: 해당 주간 범위 내에 custom_date 가 있는 수업
+    if (week_start && week_end) {
+      sql += `
+        AND (
+          custom_date IS NULL
+          OR (custom_date >= ? AND custom_date <= ?)
+        )
+      `;
+      params.push(week_start, week_end);
     }
 
     sql += ` ORDER BY ${ORDER_BY_DAY}, start_time`;
 
     const [rows] = await pool.query(sql, params);
-    return res.json(rows);
+    res.json(rows);
   } catch (err) {
     console.error("❌ 시간표 조회 오류:", err);
-    return res.status(500).json({ error: "시간표 조회 오류" });
+    res.status(500).json({ error: "시간표 조회 오류" });
   }
 };
 
@@ -72,11 +84,11 @@ export const createTimetable = async (req, res) => {
         [day_of_week, grade_id, end_time, start_time]
       );
 
-      if (conflicts.length > 0) {
-        return res
-          .status(409)
-          .json({ error: "해당 시간에 이미 수업이 존재합니다." });
-      }
+      // if (conflicts.length > 0) {
+      //   return res
+      //     .status(409)
+      //     .json({ error: "해당 시간에 이미 수업이 존재합니다." });
+      // }
     }
 
     await pool.query(
