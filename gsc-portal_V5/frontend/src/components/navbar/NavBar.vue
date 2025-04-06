@@ -40,7 +40,8 @@ export default {
 .navbar {
   background: #ffffff;
   border-bottom: 1px solid #ddd;
-  position: fixed; top: 0; left: 0; right: 0;
+  position: fixed;
+  top: 0; left: 0; right: 0;
   height: 60px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 20px;
@@ -65,5 +66,4 @@ export default {
 .user-section {
   display: flex; align-items: center; gap: 10px;
 }
-body { padding-top: 60px; }
 </style>

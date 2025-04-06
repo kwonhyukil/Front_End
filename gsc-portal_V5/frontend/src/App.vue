@@ -7,11 +7,35 @@
 </template>
 
 <script>
+import { onMounted } from "vue";
 import NavBar from "./components/navbar/Navbar.vue";
+import { useAuthStore } from "./store/authStore";
+import axios from "axios";
 
 export default {
   name: "App",
   components: { NavBar },
+  setup() {
+    const authStore = useAuthStore();
+
+    const checkSession = async () => {
+      try {
+        const response = await axios.get("/auth/check-session", {
+          withCredentials: true
+        });
+        
+        if (response.data.isAuthenticated) {
+          authStore.setUser(response.data.user);
+        }
+      } catch (error) {
+        console.error("세션 체크 실패:", error);
+      }
+    };
+
+    onMounted(() => {
+      checkSession();
+    });
+  }
 };
 </script>
 

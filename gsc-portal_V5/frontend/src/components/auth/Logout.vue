@@ -1,35 +1,48 @@
 <template>
   <div class="logout-container">
-    <h2>로그아웃 중...</h2>
+    <p>로그아웃 처리 중...</p>
   </div>
 </template>
 
-<script>
-import { onMounted } from "vue";
-import { useAuthStore } from "../../store/authStore.js";
-import { logoutRequest } from "../../api/auth.js";
-import { useRouter } from "vue-router";
+<script setup>
+import { onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../store/authStore';
+import { logout } from '../../api/auth';
 
-export default {
-  name: "Logout",
-  setup() {
-    const authStore = useAuthStore();
-    const router = useRouter();
+const router = useRouter();
+const authStore = useAuthStore();
 
-    onMounted(async () => {
-      if (authStore.isAuthenticated) {
-        await logoutRequest(authStore.token);
-      }
-      authStore.logout();
-      router.push("/login");
-    });
-  },
+const handleLogout = async () => {
+  try {
+    // 먼저 로컬 상태를 초기화
+    authStore.clearAuth();
+    
+    // 백엔드에 로그아웃 요청
+    await logout();
+    
+    // 로그인 페이지로 강제 리디렉션
+    window.location.href = '/login';
+  } catch (error) {
+    console.error('로그아웃 실패:', error);
+    // 에러가 발생해도 로그인 페이지로 강제 리디렉션
+    window.location.href = '/login';
+  }
 };
+
+// 컴포넌트가 마운트되면 즉시 로그아웃 처리
+onMounted(() => {
+  handleLogout();
+});
 </script>
 
 <style scoped>
 .logout-container {
-  text-align: center;
-  margin-top: 100px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 1.2em;
+  color: #666;
 }
 </style>

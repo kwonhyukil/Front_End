@@ -1,48 +1,70 @@
 <template>
   <div class="login-container">
-    <h2>Google 로그인</h2>
-    <button @click="loginWithGoogle">Google로 로그인</button>
+    <h2>로그인</h2>
+    <div v-if="error" class="error-message">{{ getErrorMessage(error) }}</div>
+    <button @click="handleGoogleLogin" class="google-login-button">
+      Google로 로그인
+    </button>
   </div>
 </template>
 
-<script>
-import { onMounted, ref } from "vue";
-import { useRoute, useRouter } from "vue-router";
-import { useAuthStore } from "../../store/authStore.js";
-import { useUserStore } from "../../store/userStore.js";
+<script setup>
+import { ref, onMounted } from 'vue';
 
-export default {
-  name: "Login",
-  setup() {
-    const route = useRoute();
-    const router = useRouter();
-    const token = ref(route.query.token || "");
-    const authStore = useAuthStore();
-    const userStore = useUserStore();
+const error = ref(null);
+const BACKEND_URL = 'http://localhost:8080';
 
-    onMounted(async () => {
-      if (token.value) {
-        // 토큰 저장 + 사용자 프로필 로드
-        authStore.setToken(token.value);
-        await userStore.loadProfile(token.value);
-        authStore.setUser(userStore.profile);
-        router.push("/home");
-      }
-    });
-
-    const loginWithGoogle = () => {
-      const backendURL = import.meta.env.VITE_BACKEND_URL;
-      window.location.href = `${backendURL}/auth/google`;
-    };
-
-    return { token, loginWithGoogle };
-  },
+const handleGoogleLogin = () => {
+  window.location.href = `${BACKEND_URL}/auth/google`;
 };
+
+const getErrorMessage = (error) => {
+  switch (error) {
+    case 'authentication_failed':
+      return '인증에 실패했습니다.';
+    case 'no_user_data':
+      return '사용자 정보를 가져올 수 없습니다.';
+    default:
+      return '로그인 중 오류가 발생했습니다.';
+  }
+};
+
+onMounted(() => {
+  // URL에서 에러 파라미터 확인
+  const urlParams = new URLSearchParams(window.location.search);
+  error.value = urlParams.get('error');
+});
 </script>
 
 <style scoped>
 .login-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 20px;
   text-align: center;
-  margin-top: 120px;
+}
+
+.google-login-button {
+  display: inline-block;
+  background-color: #4285f4;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 4px;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  margin-top: 20px;
+}
+
+.google-login-button:hover {
+  background-color: #357abd;
+}
+
+.error-message {
+  color: red;
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #ffebee;
+  border-radius: 4px;
 }
 </style>

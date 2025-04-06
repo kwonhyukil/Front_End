@@ -11,43 +11,52 @@ const { JWT_SECRET, FRONTEND_URL } = process.env;
  */
 export const googleLoginCallback = async (req, res) => {
   try {
+    if (!req.user || !req.user.profile) {
+      console.error("사용자 정보가 없습니다.");
+      return res.redirect(`${FRONTEND_URL}/login?error=no_user_data`);
+    }
+
     const { profile } = req.user;
     const email = profile.emails[0].value;
     const name = profile.displayName;
 
-    // users 테이블에 존재 여부 확인
-    const [userRows] = await pool.query("SELECT * FROM users WHERE email=?", [
+    console.log("로그인 시도:", { email, name });
+
+    // users 테이블에서 사용자 확인
+    const [users] = await pool.query("SELECT * FROM users WHERE email = ?", [
       email,
     ]);
 
-    if (userRows.length > 0) {
-      // 기존 사용자
-      const user = userRows[0];
-      // JWT 발급
-      const payload = { id: user.id, email: user.email, role_id: user.role_id };
-      const token = jwt.sign(payload, JWT_SECRET, { expiresIn: "2h" });
+    if (users.length > 0) {
+      // 기존 사용자인 경우
+      const user = users[0];
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role_id: user.role_id },
+        JWT_SECRET,
+        { expiresIn: "24h" }
+      );
       return res.redirect(`${FRONTEND_URL}/login?token=${token}`);
     } else {
-      // users에 없음 → registrations 테이블에 등록
-      // 기존에 pending 상태로 있나?
-      const [regRows] = await pool.query(
-        "SELECT * FROM registrations WHERE email=?",
+      // 신규 사용자인 경우
+      const [registrations] = await pool.query(
+        "SELECT * FROM registrations WHERE email = ?",
         [email]
       );
-      if (regRows.length === 0) {
-        // 새로 등록
-        // 기본값: 학생(3) 가정
+
+      if (registrations.length === 0) {
+        // 등록 정보가 없는 경우 새로 등록
         await pool.query(
-          "INSERT INTO registrations (email, name, role_id) VALUES (?,?,3)",
+          "INSERT INTO registrations (email, name, role_id) VALUES (?, ?, 3)",
           [email, name]
         );
       }
-      // 토큰 없이 → 프론트에서 회원정보 입력 페이지로 안내
+
+      // 회원가입 페이지로 리다이렉트
       return res.redirect(`${FRONTEND_URL}/registration?email=${email}`);
     }
   } catch (error) {
-    console.error("googleLoginCallback error:", error);
-    return res.status(500).json({ error: "로그인 처리 중 오류" });
+    console.error("Google 로그인 콜백 에러:", error);
+    return res.redirect(`${FRONTEND_URL}/login?error=server_error`);
   }
 };
 

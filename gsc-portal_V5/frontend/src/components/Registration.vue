@@ -19,7 +19,7 @@
   
         <div class="form-group">
           <label for="email">이메일</label>
-          <input type="email" id="email" v-model="email" required />
+          <input type="email" id="email" v-model="email" required disabled />
         </div>
   
         <div class="form-group checkbox-group">
@@ -33,9 +33,9 @@
   </template>
   
   <script>
-  import { ref } from "vue";
+  import { ref, onMounted } from "vue";
+  import { useRouter, useRoute } from "vue-router";
   import axios from "axios";
-  import { useRouter } from "vue-router";
   
   export default {
     setup() {
@@ -45,21 +45,30 @@
       const email = ref("");
       const isInternational = ref(false);
       const router = useRouter();
+      const route = useRoute();
+  
+      onMounted(() => {
+        // URL 파라미터에서 이메일 가져오기
+        email.value = route.query.email || "";
+      });
   
       const submitRegistration = async () => {
         try {
-          await axios.post("http://localhost:5000/api/auth/profile-setup", {
+          const response = await axios.post("http://localhost:8080/auth/registration", {
             name: name.value,
-            studentId: studentId.value,
+            student_id: studentId.value,
             phone: phone.value,
             email: email.value,
-            isInternational: isInternational.value
+            is_international: isInternational.value
           });
   
-          alert("가입 신청이 완료되었습니다. 관리자 승인을 기다려 주세요.");
-          router.push("/login");
+          if (response.data) {
+            alert("가입 신청이 완료되었습니다. 관리자 승인을 기다려 주세요.");
+            router.push("/login");
+          }
         } catch (error) {
           console.error("가입 신청 실패:", error);
+          alert(error.response?.data?.error || "가입 신청 중 오류가 발생했습니다.");
         }
       };
   
@@ -100,6 +109,11 @@
     padding: 8px;
     border: 1px solid #ccc;
     border-radius: 4px;
+  }
+  
+  input:disabled {
+    background-color: #f5f5f5;
+    cursor: not-allowed;
   }
   
   .checkbox-group {
