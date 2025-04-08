@@ -1,0 +1,121 @@
+<!DOCTYPE html> <!-- HTML5 문서임을 선언 -->
+<html lang="ko"> <!-- 문서의 언어를 한국어로 설정 -->
+<head>
+  <meta charset="UTF-8"> <!-- 문자 인코딩을 UTF-8로 설정 -->
+  <title>로그인</title> <!-- 브라우저 탭 제목 설정 -->
+  <style>
+    * {
+      box-sizing: border-box; /* 모든 요소의 박스 크기를 테두리까지 포함해 계산 */
+    }
+    body {
+      margin: 0; /* 기본 마진 제거 */
+      padding: 0; /* 기본 패딩 제거 */
+      font-family: sans-serif; /* 기본 글꼴 설정 */
+      background-color: #f2f2f2; /* 배경색 연한 회색 설정 */
+      display: flex; /* 중앙 정렬을 위한 Flexbox 사용 */
+      justify-content: center; /* 수평 가운데 정렬 */
+      align-items: center; /* 수직 가운데 정렬 */
+      height: 100vh; /* 뷰포트 높이 전체 사용 */
+    }
+
+    .login-box {
+      width: 30%; /* 화면 너비의 30% 사용 */
+      min-width: 280px; /* 최소 너비를 280px로 설정 */
+      background-color: #fff; /* 배경색 흰색 */
+      padding: 5%; /* 내부 여백 5% */
+      border: 1px solid #ccc; /* 연한 회색 테두리 */
+      border-radius: 10px; /* 모서리 둥글게 */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+    }
+
+    .login-box h2 {
+      margin-bottom: 10%; /* 아래 여백 10% */
+      font-size: 1.5em; /* 글자 크기 1.5배 */
+    }
+
+    .login-box label {
+      display: block; /* 블록 요소로 표시 */
+      margin-bottom: 5px; /* 아래 여백 */
+      font-size: 1em; /* 글자 크기 기본 */
+    }
+
+    .login-box input {
+      width: 100%; /* 입력창 전체 너비 사용 */
+      padding: 3%; /* 안쪽 여백 */
+      margin-bottom: 10%; /* 아래 여백 */
+      font-size: 1em; /* 글자 크기 기본 */
+    }
+
+    .login-box button {
+      width: 100%; /* 버튼 전체 너비 사용 */
+      padding: 3%; /* 안쪽 여백 */
+      font-size: 1em; /* 글자 크기 기본 */
+      background-color: #57a99a; /* 버튼 배경색 */
+      color: white; /* 글자색 흰색 */
+      border: none; /* 테두리 제거 */
+      cursor: pointer; /* 커서 포인터로 변경 */
+      border-radius: 3px; /* 버튼 모서리 둥글게 */
+    }
+
+    .login-box button:hover {
+      background-color: #4a9486; /* 마우스 올렸을 때 색 변경 */
+    }
+
+    @media screen and (max-width: 600px) {
+    .login-box {
+        width: 80%; /* 화면이 작을 경우 너비 80%로 확대 */
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-box"> <!-- 로그인 박스 전체 감싸는 div -->
+    <h2>로그인</h2> <!-- 제목 -->
+    <form action="result.html" method="post"> <!-- 로그인 버튼 클릭 시 result.html로 GET 방식 전송 -->
+      <label for="id">아이디:</label>
+      <input type="text" name="id" id="id" required>
+
+      <label for="pw">비밀번호:</label>
+      <input type="password" name="pw" id="pw" required> 
+
+      <button type="submit">로그인</button>
+    </form>
+  </div>
+</body>
+</html>
+
+<!-- 
+[HTML 태그 역할 정리]
+
+<!DOCTYPE html> : HTML5 문서임을 나타내는 선언부
+
+<html> : HTML 문서의 루트(root) 요소
+
+<head> : 문서의 메타데이터(제목, 문자셋, 스타일 등)를 포함하는 영역
+
+<meta charset="UTF-8"> : 문자 인코딩을 UTF-8로 설정해 한글 등 다양한 문자 표현 가능하게 함
+
+<title> : 브라우저 탭에 표시될 문서 제목을 설정
+
+<style> : 내부 CSS 작성 영역
+
+<body> : 화면에 실제로 보이는 내용을 포함하는 본문 영역
+
+<div> : 영역을 나누기 위한 블록 요소 (여기선 로그인 박스를 감쌈)
+
+<h2> : 제목(heading) 요소 (중간 크기 제목)
+
+<form> : 사용자 입력을 서버나 다른 페이지로 전송할 수 있는 양식
+
+<label> : 입력 필드에 대한 설명(레이블)을 붙이는 태그
+
+<input> : 사용자 입력을 받을 수 있는 필드. type 속성으로 텍스트 또는 비밀번호 입력 구분
+
+<button> : 클릭 가능한 버튼 요소
+
+required : 사용자가 반드시 입력해야 하는 필드를 지정
+
+action : 폼 전송 시 이동할 URL을 지정
+
+method : 폼 전송 방식 (GET은 주소창에 데이터 노출, POST는 숨김)
+-->

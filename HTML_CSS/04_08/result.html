@@ -1,0 +1,88 @@
+<!DOCTYPE html> <!-- HTML5 문서임을 선언 -->
+<html lang="ko"> <!-- 문서의 언어를 한국어로 설정 -->
+<head>
+  <meta charset="UTF-8"> <!-- 문자 인코딩을 UTF-8로 설정 -->
+  <title>로그인 결과</title> <!-- 브라우저 탭 제목 설정 -->
+  <style>
+    body {
+      font-family: sans-serif; /* 기본 글꼴 설정 */
+      background-color: #f9f9f9; /* 배경색 연한 회색 */
+      display: flex; /* 중앙 정렬을 위한 Flexbox 사용 */
+      justify-content: center; /* 수평 가운데 정렬 */
+      align-items: center; /* 수직 가운데 정렬 */
+      height: 100vh; /* 전체 화면 높이 사용 */
+      margin: 0; /* 기본 마진 제거 */
+    }
+
+    .result-box {
+      width: 40%; /* 화면 너비의 40% 사용 */
+      min-width: 300px; /* 최소 너비 300px */
+      padding: 5%; /* 내부 여백 5% */
+      background-color: white; /* 배경색 흰색 */
+      border: 1px solid #ccc; /* 테두리 설정 */
+      border-radius: 10px; /* 모서리 둥글게 */
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+    }
+
+    h2 {
+      margin-bottom: 20px; /* 제목 아래 여백 */
+    }
+
+    p {
+      font-size: 1em; /* 문단 글자 크기 */
+      margin: 10px 0; /* 위아래 여백 */
+    }
+
+  </style>
+</head>
+<body>
+  <div class="result-box"> <!-- 결과 박스를 감싸는 div -->
+    <h2>로그인 결과</h2> <!-- 제목 -->
+    <div id="output"></div> <!-- 자바스크립트로 출력값을 삽입할 영역 -->
+  </div>
+
+  <script>
+    // 페이지가 로드되었을 때 실행되는 함수
+    window.onload = function () {
+      const params = new URLSearchParams(window.location.search); // URL의 쿼리스트링 가져오기
+      const id = params.get("id");
+      const pw = params.get("pw"); 
+      // 결과 출력 영역에 아이디, 비밀번호 표시
+      document.getElementById("output").innerHTML = `
+        <p><strong>입력한 아이디:</strong> ${id}</p>
+        <p><strong>입력한 비밀번호:</strong> ${pw}</p>
+      `;
+    };
+  </script>
+</body>
+</html>
+
+<!-- 
+[HTML 태그 및 요소 역할 정리]
+
+<!DOCTYPE html> : HTML5 문서로 해석하라는 지시
+
+<html> : HTML 문서의 최상위 태그
+
+<head> : 문서 제목, 문자 인코딩, 스타일, 스크립트 등 메타정보 포함
+
+<meta charset="UTF-8"> : 한글이나 다양한 문자가 깨지지 않도록 UTF-8 설정
+
+<title> : 브라우저 제목표시줄 또는 탭 제목 지정
+
+<style> : HTML 안에서 CSS를 직접 작성할 수 있는 태그
+
+<script> : JavaScript 코드를 삽입하는 태그
+
+body> : 사용자에게 보이는 모든 콘텐츠를 담는 태그
+
+<div> : 레이아웃을 나누거나 그룹을 묶기 위한 블록 요소
+
+<h2> : 제목 텍스트를 나타내며 크기와 강조 수준을 의미
+
+id="output" : JavaScript에서 이 요소를 선택해 동적으로 내용을 삽입하기 위한 고유 식별자
+
+URLSearchParams : 주소창(URL)의 파라미터를 쉽게 읽고 처리하는 JavaScript 내장 객체
+
+window.onload : 페이지가 완전히 로드된 후 실행되는 이벤트 핸들러
+-->
