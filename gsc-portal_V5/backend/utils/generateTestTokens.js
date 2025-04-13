@@ -1,3 +1,4 @@
+// 📄 generateTestTokens.js
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import mysql from "mysql2/promise"; // ✅ MySQL 연결 라이브러리 사용
@@ -24,7 +25,9 @@ async function generateTokens() {
     console.log("🔍 `registrations` 테이블에서 사용자 정보 가져오는 중...");
 
     // ✅ `registrations` 테이블에서 승인 대기 중인 사용자 가져오기
-    const [users] = await pool.query("SELECT id, email, role_id FROM registrations");
+    const [users] = await pool.query(
+      "SELECT id, email, role_id FROM registrations"
+    );
 
     if (users.length === 0) {
       console.log("❌ 승인 대기 중인 사용자가 없습니다.");
@@ -43,9 +46,11 @@ async function generateTokens() {
       console.log(`✅ ${user.email} (role_id: ${user.role_id})`);
       console.log(`   토큰: ${token}\n`);
     });
-
   } catch (error) {
-    console.error("❌ 데이터베이스에서 사용자 정보를 가져오는 중 오류 발생:", error);
+    console.error(
+      "❌ 데이터베이스에서 사용자 정보를 가져오는 중 오류 발생:",
+      error
+    );
   } finally {
     await pool.end(); // ✅ MySQL 연결 종료
   }

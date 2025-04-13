@@ -8,7 +8,6 @@ export const useTimetableStore = defineStore("timetable", {
   state: () => ({
     timetables: [],
   }),
-
   actions: {
     // ✅ 전체 시간표 불러오기 (학년 + 주차 범위)
     async loadAllTimetables(grade = "all", weekStart, weekEnd) {

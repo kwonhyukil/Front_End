@@ -1,6 +1,7 @@
+// adminRoutes.js
 import { Router } from "express";
-import pool from "../config/db.js";
-import { authRequired } from "../middleware/authMiddleware.js";
+import pool from "./config/db.js";
+import { authRequired } from "./middleware/authMiddleware.js";
 
 const router = Router();
 

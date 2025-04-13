@@ -1,3 +1,4 @@
+// [경로: backend/controllers/timetableController.js]
 import pool from "../config/db.js";
 
 // ✅ 요일 순 정렬
@@ -83,7 +84,6 @@ export const createTimetable = async (req, res) => {
          )`,
         [day_of_week, grade_id, end_time, start_time]
       );
-
       // if (conflicts.length > 0) {
       //   return res
       //     .status(409)

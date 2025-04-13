@@ -50,7 +50,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import { useAuthStore } from '../../store/authStore.js';
@@ -78,7 +77,6 @@ const professors = ref([]);
 
 const isEditMode = computed(() => !!props.scheduleToEdit);
 
-// ✅ 초기값 세팅
 onMounted(async () => {
   if (props.day) dayOfWeek.value = props.day;
   if (props.hour) {
@@ -115,7 +113,6 @@ const getProfessorNameById = (id) => {
   return found?.name || '';
 };
 
-// ✅ 등록/수정 처리
 const submitForm = async () => {
   try {
     if (!courseName.value || !professorId.value || !room.value) {

@@ -2,14 +2,12 @@
   <div class="schedule-viewer container">
     <h2>학년별 시간표</h2>
 
-    <!-- ✅ 학년 선택 -->
     <div class="grade-select">
       <button :class="{active: selectedGrade === '1'}" @click="changeGrade('1')">1학년</button>
       <button :class="{active: selectedGrade === '2'}" @click="changeGrade('2')">2학년</button>
       <button :class="{active: selectedGrade === '3'}" @click="changeGrade('3')">3학년</button>
     </div>
 
-    <!-- ✅ 주차 선택 -->
     <div class="week-select">
       <label>주차 선택:</label>
       <select v-model="selectedWeek" @change="loadData">
@@ -17,12 +15,10 @@
       </select>
     </div>
 
-    <!-- ✅ 날짜 범위 -->
     <div class="week-range">
       <p>{{ selectedWeek }}주차 ({{ weekRange.start }} ~ {{ weekRange.end }})</p>
     </div>
 
-    <!-- ✅ 시간표 테이블 -->
     <div class="timetable">
       <table class="time-table">
         <thead>
@@ -59,7 +55,6 @@
       </table>
     </div>
 
-    <!-- ✅ 등록 / 수정 모달 -->
     <TimetableModal
       v-if="showModal && canEdit"
       :day="selectedDay"
@@ -70,8 +65,6 @@
       @created="handleCreated"
     />
 
-
-    <!-- ✅ 툴팁 -->
     <div
       v-if="tooltip.visible"
       class="tooltip-box"
@@ -94,7 +87,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useTimetableStore } from '../../store/timetableStore';
@@ -116,7 +108,6 @@ const days = ['월','화','수','목','금','토'];
 const hours = [9,10,11,12,13,14,15,16,17,18];
 const semesterStart = new Date('2025-03-03');
 
-// ✅ 주차 계산
 const getWeekRange = (week) => {
   const start = new Date(semesterStart);
   start.setDate(start.getDate() + (week - 1) * 7);
@@ -138,7 +129,6 @@ const getWeekRange = (week) => {
 };
 const weekRange = ref(getWeekRange(selectedWeek.value));
 
-// ✅ 시간표 필터
 const getClasses = (day, hour, date) => {
   return store.timetables.filter(item => {
     if (Number(item.grade_id) !== Number(selectedGrade.value)) return false;
@@ -154,7 +144,6 @@ const getClasses = (day, hour, date) => {
   });
 };
 
-// ✅ 툴팁
 const tooltip = ref({ visible: false, classes: [], top: 0, left: 0 });
 let hideTimeout = 2000;
 
@@ -187,12 +176,11 @@ const hideTooltipWithDelay = () => {
   }, 1500);
 };
 
-// ✅ 등록/수정 모달 핸들러
 const cellClick = (day, hour) => {
   if (!canEdit.value) return;
   selectedDay.value = day;
   selectedHour.value = hour;
-  scheduleToEdit.value = null; // 등록 모드
+  scheduleToEdit.value = null;
   showModal.value = true;
 };
 const editClass = (cls) => {
@@ -235,7 +223,6 @@ onMounted(loadData);
   background: #fff;
   padding: 20px;
   border-radius: 8px;
-  font-family: 'Arial', sans-serif;
 }
 
 /* 학년 선택 */
@@ -315,8 +302,6 @@ onMounted(loadData);
 .schedule-cell:hover {
   background: #f4faff;
 }
-
-/* 수업 박스 */
 .class-box {
   max-height: 100%;
   overflow: hidden;
@@ -326,27 +311,6 @@ onMounted(loadData);
   font-size: 0.85rem;
   font-weight: bold;
   color: #333;
-}
-
-/* 🟦 일반 수업 */
-.일반 {
-  background-color: #cfe9ff;
-}
-
-/* ⚪ 휴강 */
-.휴강 {
-  background-color: #dddddd;
-  text-decoration: line-through; /* 휴강은 취소선도 가능 */
-}
-
-/* 🟩 보강 */
-.보강 {
-  background-color: #b4f0b4;
-}
-
-/* 🟪 특강 */
-.특강 {
-  background-color: #e0c6ff;
 }
 
 /* 툴팁 */

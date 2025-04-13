@@ -41,9 +41,8 @@
 <script setup>
 import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
-import { useAuthStore } from '../../store//authStore';
+import { useAuthStore } from '../../store/authStore';
 
-const auth = useAuthStore();
 const props = defineProps(['noticeToEdit']);
 const emit = defineEmits(['close', 'submitted']);
 
@@ -54,6 +53,7 @@ const professors = ref([]);
 const eventDate = ref('');
 const isDepartmentEvent = ref(false);
 
+const auth = useAuthStore();
 const isEditMode = computed(() => !!props.noticeToEdit);
 
 onMounted(async () => {

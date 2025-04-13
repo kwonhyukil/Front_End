@@ -1,3 +1,4 @@
+<!-- [경로: frontend/src/components/Profile.vue] -->
 <template>
   <div class="profile-page">
     <h2>내 프로필</h2>
@@ -23,7 +24,7 @@ export default {
     onMounted(async () => {
       if (authStore.token) {
         await userStore.loadProfile(authStore.token);
-        authStore.setUser(userStore.profile);
+        authStore.setAuth(userStore.profile, authStore.token);
       }
     });
 

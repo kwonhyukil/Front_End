@@ -1,100 +1,112 @@
-// [경로: backend/routes/authRoutes.js]
 import { Router } from "express";
 import passport from "passport";
-import { googleConfig, googleStrategy } from "../config/googleAuth.js";
+import { googleStrategy } from "../config/googleAuth.js";
+import {
+  findUserByEmail,
+  createUser,
+  saveRefreshToken,
+} from "../models/users.js";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
+import cookieParser from "cookie-parser";
+
+dotenv.config();
 
 const router = Router();
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5175";
+const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5180";
 
-console.log("Google OAuth 설정:", {
-  ...googleConfig,
-  clientSecret: "***", // 보안을 위해 시크릿은 숨김
-});
-
-// Passport Google 전략 설정
+// 🔐 Google 인증 전략 등록
 passport.use(googleStrategy);
 
-// 세션 직렬화
-passport.serializeUser((user, done) => {
-  console.log("Serializing user:", user);
-  done(null, user);
-});
+// 🍪 쿠키 파서 미들웨어 등록
+router.use(cookieParser());
 
-// 세션 역직렬화
-passport.deserializeUser((obj, done) => {
-  console.log("Deserializing user:", obj);
-  done(null, obj);
-});
+// ✅ Google 로그인 요청 라우터
+router.get("/google", (req, res, next) => {
+  const dynamicState = Math.random().toString(36).substring(7);
+  console.log("📤 Google 인증 요청: state =", dynamicState);
 
-// Google 로그인 시작
-router.get(
-  "/google",
-  (req, res, next) => {
-    console.log("Google 로그인 시작:", {
-      sessionID: req.sessionID,
-      isAuthenticated: req.isAuthenticated(),
-    });
-    next();
-  },
   passport.authenticate("google", {
     scope: ["profile", "email"],
     accessType: "offline",
     prompt: "consent",
-    state: Math.random().toString(36).substring(7),
-  })
-);
-
-// Google 콜백
-router.get(
-  "/google/callback",
-  (req, res, next) => {
-    console.log("Google 콜백 수신:", {
-      query: req.query,
-      path: req.path,
-      state: req.query.state,
-      error: req.query.error,
-      sessionID: req.sessionID,
-    });
-    if (req.query.error) {
-      return res.redirect(`${FRONTEND_URL}/login?error=${req.query.error}`);
-    }
-    next();
-  },
-  passport.authenticate("google", {
-    failureRedirect: `${FRONTEND_URL}/login?error=authentication_failed`,
-    failWithError: true,
-  }),
-  (req, res) => {
-    console.log("인증 성공:", req.user);
-    res.redirect(`${FRONTEND_URL}/dashboard`);
-  }
-);
-
-// 세션 확인
-router.get("/check-session", (req, res) => {
-  console.log("세션 확인:", {
-    sessionID: req.sessionID,
-    isAuthenticated: req.isAuthenticated(),
-    user: req.user,
-  });
-
-  if (req.isAuthenticated()) {
-    res.json({
-      isAuthenticated: true,
-      user: req.user,
-    });
-  } else {
-    res.json({
-      isAuthenticated: false,
-    });
-  }
+    state: dynamicState,
+    session: false, // 세션 사용 안 함
+  })(req, res, next);
 });
 
-// 로그아웃
+// ✅ Google 콜백 처리 라우터
+router.get("/google/callback", (req, res, next) => {
+  passport.authenticate("google", async (err, user, info) => {
+    // ❌ 인증 실패 시 처리
+    if (err || !user) {
+      console.error("❌ 인증 실패:", err || info);
+      return res.redirect(`${FRONTEND_URL}/login?error=authentication_failed`);
+    }
+
+    try {
+      // ✅ 유저 정보에서 이메일, 이름 추출
+      const { email, name } = user;
+
+      // 🔍 DB에서 유저 검색
+      let existingUser = await findUserByEmail(email);
+
+      // 👤 유저가 없으면 회원가입 페이지로 리다이렉트
+      if (!existingUser) {
+        return res.redirect(
+          `${FRONTEND_URL}/register?email=${encodeURIComponent(
+            email
+          )}&name=${encodeURIComponent(name)}`
+        );
+      }
+
+      // 🔐 Access Token 발급
+      const accessToken = jwt.sign(
+        {
+          id: existingUser.id,
+          name: existingUser.name,
+          email: existingUser.email,
+          role: existingUser.role_id,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: "1h" }
+      );
+      console.log("✅ AccessToken 발급:", accessToken);
+      // 🔐 Refresh Token 발급
+      const refreshToken = jwt.sign(
+        { id: existingUser.id },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "7d" }
+      );
+      console.log("✅ RefreshToken 발급:", refreshToken);
+      // 💾 Refresh Token을 DB에 저장
+      await saveRefreshToken(existingUser.id, refreshToken);
+
+      // 🍪 Refresh Token을 쿠키에 저장
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: false,
+        sameSite: "Strict",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+      });
+
+      // ✅ 프론트엔드로 Access Token 전달
+      res.redirect(`${FRONTEND_URL}/home?accessToken=${accessToken}`);
+      console.log(
+        "➡️ 리다이렉트 주소:",
+        `${FRONTEND_URL}/home?accessToken=${accessToken}`
+      );
+    } catch (error) {
+      console.error("서버 오류 발생:", error);
+      res.redirect(`${FRONTEND_URL}/login?error=server_error`);
+    }
+  })(req, res, next); // 미들웨어 직접 호출 방식
+});
+
+// 🔓 로그아웃 라우터
 router.get("/logout", (req, res) => {
-  req.logout(() => {
-    res.redirect(`${FRONTEND_URL}/login`);
-  });
+  res.clearCookie("refreshToken");
+  res.redirect(`${FRONTEND_URL}/login`);
 });
 
 export default router;

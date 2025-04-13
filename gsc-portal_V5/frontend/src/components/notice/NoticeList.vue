@@ -2,7 +2,6 @@
   <div class="notice-list container">
     <h2>📢 공지사항</h2>
 
-    <!-- 🔹 학년별 필터 버튼 -->
     <div class="filters">
       <button :class="{ active: selectedGrade === 'all' }" @click="selectGrade('all')">전체</button>
       <button :class="{ active: selectedGrade === '1' }" @click="selectGrade('1')">1학년</button>
@@ -12,7 +11,6 @@
       <button @click="loadNotices">검색</button>
     </div>
 
-    <!-- 🔹 공지사항 목록 -->
     <table class="notice-table">
       <thead>
         <tr>
@@ -25,7 +23,6 @@
         </tr>
       </thead>
       <tbody>
-        <!-- 🔹 중요 공지는 항상 맨 위 -->
         <tr v-for="item in importantNotices" :key="'important-' + item.id" class="important-row" @click="goDetail(item.id)">
           <td>❤️</td>
           <td>{{ item.title }}</td>
@@ -35,7 +32,6 @@
           <td>{{ item.view_count }}</td>
         </tr>
 
-        <!-- 🔹 일반 공지 (1번부터 순차적으로) -->
         <tr v-for="(item, index) in paginatedNotices" :key="item.id" @click="goDetail(item.id)">
           <td>{{ index + 1 }}</td>
           <td>{{ item.title }}</td>
@@ -45,19 +41,15 @@
           <td>{{ item.view_count }}</td>
         </tr>
 
-        <!-- ✅ 10개가 안될 경우 빈 줄 유지 -->
         <tr v-for="n in emptyRows" :key="'empty-' + n">
           <td colspan="6" class="empty-row"></td>
         </tr>
       </tbody>
     </table>
 
-    <!-- 🔹 페이지네이션 -->
     <div class="pagination">
       <button @click="prevPage" :disabled="currentPage === 1">◀</button>
-      <span v-for="page in totalPages" :key="page" 
-            :class="{ active: currentPage === page }"
-            @click="goToPage(page)">
+      <span v-for="page in totalPages" :key="page" :class="{ active: currentPage === page }" @click="goToPage(page)">
         {{ page }}
       </span>
       <button @click="nextPage" :disabled="currentPage === totalPages">▶</button>
@@ -89,9 +81,6 @@ export default {
     const currentPage = ref(1);
     const noticesPerPage = 10;
 
-    /**
-     * ✅ 공지사항 불러오기
-     */
     const loadNotices = async () => {
       try {
         const params = {};
@@ -105,9 +94,6 @@ export default {
       }
     };
 
-    /**
-     * ✅ 중요 공지와 일반 공지를 구분하여 정렬
-     */
     const importantNotices = computed(() => {
       return notices.value.filter((n) => n.is_important);
     });
@@ -118,56 +104,34 @@ export default {
         .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
     });
 
-    /**
-     * ✅ 페이지네이션 적용 (중요 공지는 항상 맨 위)
-     */
     const totalPages = computed(() => Math.ceil(normalNotices.value.length / noticesPerPage));
-
     const paginatedNotices = computed(() => {
       const start = (currentPage.value - 1) * noticesPerPage;
       return normalNotices.value.slice(start, start + noticesPerPage);
     });
-
-    /**
-     * ✅ 테이블 크기 유지 (10개 미만이면 빈 줄 추가)
-     */
     const emptyRows = computed(() => {
       return Math.max(0, noticesPerPage - paginatedNotices.value.length);
     });
 
-    /**
-     * ✅ 페이지 이동 함수
-     */
     const goToPage = (page) => {
       currentPage.value = page;
     };
-
     const prevPage = () => {
       if (currentPage.value > 1) currentPage.value--;
     };
-
     const nextPage = () => {
       if (currentPage.value < totalPages.value) currentPage.value++;
     };
 
-    /**
-     * ✅ 학년 선택 버튼 클릭 시 필터 변경
-     */
     const selectGrade = (grade) => {
       selectedGrade.value = grade;
       loadNotices();
     };
 
-    /**
-     * ✅ 공지사항 상세 페이지 이동
-     */
     const goDetail = (id) => {
       window.location.href = `/notice/${id}`;
     };
 
-    /**
-     * ✅ 날짜 포맷 함수
-     */
     const formatDate = (str) => {
       if (!str) return "";
       const d = new Date(str);
@@ -227,14 +191,9 @@ export default {
   background: #f9f9f9;
   cursor: pointer;
 }
-.delete-section {
-  margin-top: 10px;
-  background: #ffeaea;
-  padding: 10px;
-  color: #c00;
-}
 .write-button {
   margin-top: 10px;
   background: #28a745;
+  color: #fff;
 }
 </style>

@@ -1,3 +1,4 @@
+// [경로: frontend/src/api/calendar.js]
 import axios from "axios";
 
 const BASE_URL = "https://www.googleapis.com/calendar/v3/calendars";

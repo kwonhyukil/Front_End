@@ -1,23 +1,17 @@
 <template>
   <div class="notice-detail-container">
-    <!-- 🔹 공지사항 제목 -->
     <h2>{{ notice.title }}</h2>
-
-    <!-- 🔹 작성 정보 -->
     <div class="info">
       <p>작성일: {{ formatDate(notice.created_at) }} / 조회수: {{ notice.view_count }}</p>
       <p>작성자: {{ notice.author_id }}번 유저 / 대상 학년: {{ notice.target_grade }}</p>
       <p v-if="notice.is_important">❤️ 중요 공지</p>
     </div>
-
-    <!-- 🔹 공지사항 내용 -->
     <div class="content-section">
       <p>{{ notice.content }}</p>
     </div>
-
-    <!-- 수정/삭제 -->
     <button v-if="isAdminOrProfessor" @click="openEditModal">수정</button>
     <button v-if="isAdminOrProfessor" @click="deleteNotice">삭제</button>
+
     <!-- 수정 모달 -->
     <div v-if="showEditModal" class="modal-overlay" @click.self="closeEditModal">
       <div class="modal-content">
@@ -65,7 +59,7 @@ export default {
     const editContent = ref("");
     const editTargetGrade = ref("all");
     const editImportant = ref(false);
-    // ✅ 날짜 포맷 함수 추가 (해결책)
+
     const formatDate = (dateString) => {
       if (!dateString) return "날짜 없음";
       const date = new Date(dateString);
@@ -105,7 +99,7 @@ export default {
           title: editTitle.value,
           content: editContent.value,
           target_grade: editTargetGrade.value,
-          is_important: editImportant.value
+          is_important: editImportant.value,
         };
         await updateNotice(authStore.token, notice.value.id, payload);
         alert("수정 완료!");
@@ -116,8 +110,6 @@ export default {
       }
     };
 
-    
-
     const deleteNoticeFn = async () => {
       if (!confirm("삭제하시겠습니까?")) return;
       await deleteNotice(authStore.token, notice.value.id);
@@ -127,15 +119,13 @@ export default {
 
     const downloadFile = async (attachmentId) => {
       const res = await downloadAttachmentRequest(authStore.token, attachmentId);
-      // Blob 다운로드 처리
       const url = window.URL.createObjectURL(new Blob([res.data]));
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", "attachment"); // 파일명
+      link.setAttribute("download", "attachment");
       document.body.appendChild(link);
       link.click();
     };
-    
 
     return {
       notice,
@@ -155,7 +145,6 @@ export default {
 </script>
 
 <style scoped>
-/* 모달 스타일 재사용 */
 .modal-overlay {
   position: fixed;
   top:0; left:0; right:0; bottom:0;

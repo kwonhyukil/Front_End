@@ -2,18 +2,15 @@
 import pool from "../config/db.js";
 
 /**
- * 회원가입 정보 저장 (registrations 테이블 수정)
- * - 기존에 pending 상태가 있으면 업데이트
+ * ✅ role_id = 2 (교수) 만 조회
  */
-
-// ✅ role_id = 2 (교수) 만 조회
 export const getProfessors = async (req, res) => {
   try {
     console.log("📥 교수 목록 요청 들어옴");
     const [rows] = await pool.query(
       `SELECT id, name FROM users WHERE role_id = 2`
     );
-    console.log("🎓 교수 목록 결과:", rows); // 👈 이거 추가
+    console.log("🎓 교수 목록 결과:", rows);
     res.json(rows);
   } catch (err) {
     console.error("❌ 교수 목록 조회 오류:", err);
@@ -55,13 +52,10 @@ export const saveRegistration = async (req, res) => {
 
 /**
  * 관리자 승인 (registrations → users)
- * - status='approved'로 변경, users 테이블에 삽입
  */
 export const approveRegistration = async (req, res) => {
   try {
-    // 관리자만 승인 가능(추가 권한 체크 가능)
     const registrationId = req.params.id;
-    // registration 정보 가져오기
     const [regRows] = await pool.query(
       "SELECT * FROM registrations WHERE id=?",
       [registrationId]
@@ -70,7 +64,6 @@ export const approveRegistration = async (req, res) => {
       return res.status(404).json({ error: "등록정보 없음" });
     }
     const reg = regRows[0];
-    // users 테이블에 추가
     const [result] = await pool.query(
       `INSERT INTO users (name, email, phone, role_id, student_id, is_international)
        VALUES (?,?,?,?,?,?)`,
@@ -83,7 +76,6 @@ export const approveRegistration = async (req, res) => {
         reg.is_international,
       ]
     );
-    // registrations 상태 변경
     await pool.query("UPDATE registrations SET status='approved' WHERE id=?", [
       registrationId,
     ]);

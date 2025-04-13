@@ -1,3 +1,4 @@
+// [경로: backend/routes/calendarRoutes.js]
 import express from "express";
 import {
   getCalendarEvents,

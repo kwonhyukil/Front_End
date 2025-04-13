@@ -55,8 +55,6 @@ export const deleteNoticesBulk = async (token, ids) => {
 
 // 첨부파일 다운로드
 export const downloadAttachmentRequest = async (token, attachmentId) => {
-  // 실제로는 window.location.href로 다운로드 처리
-  // 여기선 axios blob 응답 예시
   const res = await axios.get(`${baseURL}/notice/download/${attachmentId}`, {
     headers: { Authorization: `Bearer ${token}` },
     responseType: "blob",
