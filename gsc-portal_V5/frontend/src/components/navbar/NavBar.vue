@@ -26,13 +26,10 @@
 import { useAuthStore } from "../../store/authStore";
 import { useRouter } from "vue-router";
 
-const router = useRouter();
 const authStore = useAuthStore();
+const router = useRouter();
 
-const goLogin = () => {
-  router.push("/login");
-};
-
+const goLogin = () => router.push("/login");
 const goLogout = () => {
   authStore.clearAuth();
   router.push("/login");
