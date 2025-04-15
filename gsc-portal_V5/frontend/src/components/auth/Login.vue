@@ -11,9 +11,14 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useAuthStore } from '../../store/authStore.js';
+import { jwtDecode } from 'jwt-decode';
 
 const error = ref(null);
 const BACKEND_URL = 'http://localhost:8080';
+const router = useRouter();
+const auth = useAuthStore();
 
 const handleGoogleLogin = () => {
   window.location.href = `${BACKEND_URL}/api/auth/google`;
@@ -31,26 +36,29 @@ const getErrorMessage = (error) => {
 };
 
 onMounted(() => {
-  // URL에서 에러 파라미터 확인
   const urlParams = new URLSearchParams(window.location.search);
   error.value = urlParams.get('error');
 
-  // 구글 콜백에서 /login?token=... 으로 리다이렉트 했다면
   const token = urlParams.get('accessToken');
-  console.log("✅ 리다이렉트용 accessToken:", accessToken);  // 디버그 출력 추가
-
   if (token) {
-  // ✅ 저장 먼저 하고
-    localStorage.setItem("token", token);
+    console.log("✅ accessToken 받음:", token);
 
-    // ✅ 저장 직후 이동 → 리렌더링 발생 방지 위해 setTimeout
-    setTimeout(() => {
+    try {
+      const decoded = jwtDecode(token);
+      console.log("✅ 디코딩 결과:", decoded);
+
+      // 사용자 정보 저장
+      auth.setAuth(decoded, token);
+
+      // URL 정리
       window.history.replaceState({}, "", "/home");
-      window.location.reload(); // 또는 router.replace("/home") 사용
-    }, 100); // 저장 보장
+      router.push("/home");
+    } catch (e) {
+      console.error("❌ JWT 디코딩 실패", e);
+    }
   } else {
-  console.warn("⚠️ 토큰이 URL에 없음");
-}
+    console.warn("⚠️ 토큰이 URL에 없음");
+  }
 });
 </script>
 

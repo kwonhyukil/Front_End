@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     port: 5180, // 사용 가능한 포트로 변경
-    host: "127.0.0.1", // localhost, 127.0.0.1, ::1 모두 수용
+    host: "localhost", // localhost, 127.0.0.1, ::1 모두 수용
     hmr: {
       protocol: "ws",
     },

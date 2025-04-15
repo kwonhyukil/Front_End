@@ -9,6 +9,7 @@ dotenv.config();
 const router = Router();
 
 router.post("/refresh", async (req, res) => {
+  console.log("🔎 받은 쿠키:", req.cookies);
   const token = req.cookies.refreshToken; // 쿠키에 저장
   if (!token) {
     return res.status(401).json({ error: "Refresh token 없음" });

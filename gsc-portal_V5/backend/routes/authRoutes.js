@@ -103,10 +103,10 @@ router.get("/google/callback", (req, res, next) => {
   })(req, res, next); // 미들웨어 직접 호출 방식
 });
 
-// 🔓 로그아웃 라우터
-router.get("/logout", (req, res) => {
-  res.clearCookie("refreshToken");
-  res.redirect(`${FRONTEND_URL}/login`);
+// ✅ 로그아웃 시 쿠키 제거
+router.post("/logout", (req, res) => {
+  res.clearCookie("refreshToken"); // ✅ 브라우저에 저장된 refreshToken 쿠키 제거
+  return res.json({ message: "로그아웃 성공" });
 });
 
 export default router;

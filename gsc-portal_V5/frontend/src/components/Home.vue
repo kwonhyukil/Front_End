@@ -10,27 +10,33 @@
 <script setup>
 import { onMounted } from "vue";
 import { useAuthStore } from "../store/authStore.js";
+import { jwtDecode } from "jwt-decode"; // ✅ 반드시 필요
 
 const auth = useAuthStore();
 
 onMounted(() => {
-  const params = new URLSearchParams(window.location.search);
-  const token = params.get("accessToken");
-  const name = params.get("name"); // 백엔드에서 넘겨줄 수 있음
+  const token = localStorage.getItem("token");
 
-  // ✅ 만약 백엔드가 user도 함께 쿼리스트링으로 보낸다면:
-  //    ex) &name=홍길동&role=2 ...
-  //    setAuth({ name, role: 2, ... }, token)
+  console.log("🧩 저장된 token:", token);
+
   if (token) {
-    // 여기서는 user info를 별도 API로 얻거나, JWT 디코딩해서 얻는 방식
-    // 간단히 예시로:
-    const userData = {
-      name: name || "GoogleUser", 
-      role: 2, 
-    };
-    auth.setAuth(userData, token);
-    // URL 정리
-    window.history.replaceState({}, "", "/home");
+    try {
+      const decoded = jwtDecode(token);
+      console.log("✅ 디코딩 성공:", decoded);
+
+      const userData = {
+        id: decoded.id,
+        name: decoded.name,
+        email: decoded.email,
+        role: decoded.role,
+      };
+
+      auth.setAuth(userData, token);
+    } catch (e) {
+      console.error("❌ JWT 디코딩 실패:", e.message);
+    }
+  } else {
+    console.warn("⚠️ localStorage에 token 없음");
   }
 });
 </script>

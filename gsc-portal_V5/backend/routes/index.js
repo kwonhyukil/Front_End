@@ -14,6 +14,6 @@ router.use("/user", userRoutes);
 router.use("/notice", noticeRoutes);
 router.use("/timetables", timetableRoutes);
 router.use("/calendar", calendarRoutes);
-router.use("/api", tokenRoutes);
+router.use("/token", tokenRoutes);
 
 export default router;
