@@ -2,33 +2,33 @@
 <template>
   <div class="home-container">
     <h2>홈 화면</h2>
-    <p v-if="user">👤 {{ user.name }} 님 환영합니다!</p>
+    <p v-if="!auth.isReady">⏳ 로그인 정보 확인 중...</p>
+    <p v-if="auth.user">👤 {{ auth.user.name }} 님 환영합니다!</p>
     <p v-else>🔒 로그인 정보 없음</p>
   </div>
 </template>
 
 <script setup>
 import { onMounted } from "vue";
+import { jwtDecode } from "jwt-decode";
 import { useAuthStore } from "../store/authStore.js";
-import { jwtDecode } from "jwt-decode"; // ✅ 반드시 필요
 
 const auth = useAuthStore();
 
 onMounted(() => {
+  auth.restore();
+  
   const token = localStorage.getItem("token");
-
-  console.log("🧩 저장된 token:", token);
 
   if (token) {
     try {
       const decoded = jwtDecode(token);
-      console.log("✅ 디코딩 성공:", decoded);
 
       const userData = {
         id: decoded.id,
         name: decoded.name,
         email: decoded.email,
-        role: decoded.role,
+        role_id: decoded.role, // 👈 role_id로 저장될 수 있으니 확인 필요
       };
 
       auth.setAuth(userData, token);

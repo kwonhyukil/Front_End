@@ -30,11 +30,14 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.removeItem("user");
   };
 
+  const isReady = ref(false);
+
   // ✅ 앱 시작 or 새로고침 시 localStorage로부터 복원
   const restore = () => {
     token.value = localStorage.getItem("token") || null;
     const saved = localStorage.getItem("user");
     user.value = saved ? JSON.parse(saved) : null;
+    isReady.value = true;
   };
   const restoreAccessToken = async () => {
     try {
@@ -66,6 +69,7 @@ export const useAuthStore = defineStore("auth", () => {
         },
         withCredentials: true,
       });
+      console.log("✅ 프로필 응답:", res.data); // 👈 이거 꼭 확인
       user.value = res.data;
       localStorage.setItem("user", JSON.stringify(res.data));
     } catch (err) {
@@ -86,5 +90,6 @@ export const useAuthStore = defineStore("auth", () => {
     restore,
     restoreAccessToken,
     fetchUserProfile,
+    isReady,
   };
 });

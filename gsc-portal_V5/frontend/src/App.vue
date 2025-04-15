@@ -14,11 +14,13 @@ const auth = useAuthStore();
 onMounted(async () => {
   auth.restore();
 
-  if (!auth.token) {
-    await auth.restoreAccessToken();
+  // 👉 token 있으면 사용자 정보 요청
+  let accessToken = auth.token;
+  if (!accessToken) {
+    accessToken = await auth.restoreAccessToken();
   }
 
-  if (auth.token && !auth.user) {
+  if (accessToken) {
     await auth.fetchUserProfile();
   }
 });

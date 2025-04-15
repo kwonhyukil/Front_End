@@ -3,9 +3,9 @@ import { Router } from "express";
 import authRoutes from "./authRoutes.js";
 import userRoutes from "./userRoutes.js";
 import noticeRoutes from "./noticeRoutes.js";
-import calendarRoutes from "./calendarRoutes.js";
 import timetableRoutes from "./timetableRoutes.js";
 import tokenRoutes from "./tokenRoutes.js";
+import calendarRoutes from "./calendarRoutes.js";
 
 const router = Router();
 

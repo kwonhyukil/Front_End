@@ -6,7 +6,7 @@ import Logout from "../components/auth/Logout.vue";
 import RegistrationForm from "../components/auth/RegistrationForm.vue";
 import NoticeList from "../components/notice/NoticeList.vue";
 import NoticeDetail from "../components/notice/NoticeDetail.vue";
-import CalendarPage from "../components/calendar/CalendarPage.vue";
+import CalendarPage from "../components/calendar/google_calendar.vue";
 import AdminApproval from "../components/AdminApproval.vue";
 import Profile from "../components/Profile.vue";
 import Timetable from "../components/timetable/Timetable.vue";

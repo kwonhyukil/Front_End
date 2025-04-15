@@ -4,7 +4,7 @@ const baseURL = import.meta.env.VITE_API_URL;
 
 // 시간표 조회
 export const getSchedules = async (grade = "all") => {
-  const res = await axios.get(`${baseURL}/schedule`, {
+  const res = await axios.get(`${baseURL}/api/schedule`, {
     params: { grade },
   });
   return res.data;
@@ -12,7 +12,7 @@ export const getSchedules = async (grade = "all") => {
 
 // 등록
 export const createScheduleRequest = async (token, payload) => {
-  const res = await axios.post(`${baseURL}/schedule`, payload, {
+  const res = await axios.post(`${baseURL}/api/schedule`, payload, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;
@@ -20,7 +20,7 @@ export const createScheduleRequest = async (token, payload) => {
 
 // 수정
 export const updateScheduleRequest = async (token, id, payload) => {
-  const res = await axios.put(`${baseURL}/schedule/${id}`, payload, {
+  const res = await axios.put(`${baseURL}/api/schedule/${id}`, payload, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;
@@ -28,7 +28,7 @@ export const updateScheduleRequest = async (token, id, payload) => {
 
 // 삭제
 export const deleteScheduleRequest = async (token, id) => {
-  const res = await axios.delete(`${baseURL}/schedule/${id}`, {
+  const res = await axios.delete(`${baseURL}/api/schedule/${id}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;

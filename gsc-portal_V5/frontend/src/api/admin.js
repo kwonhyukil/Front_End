@@ -5,7 +5,7 @@ const baseURL = import.meta.env.VITE_API_URL;
  * ✅ 가입 대기 사용자 목록 조회
  */
 export const fetchPendingUsers = async (token) => {
-  const res = await axios.get(`${baseURL}/admin/registrations`, {
+  const res = await axios.get(`${baseURL}/api/admin/registrations`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   return res.data;
@@ -16,7 +16,7 @@ export const fetchPendingUsers = async (token) => {
  */
 export const approveUserRequest = async (token, userId) => {
   const res = await axios.post(
-    `${baseURL}/admin/approve/${userId}`,
+    `${baseURL}/api/admin/approve/${userId}`,
     {},
     {
       headers: { Authorization: `Bearer ${token}` },

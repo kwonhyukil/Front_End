@@ -12,7 +12,7 @@ export const useTimetableStore = defineStore("timetable", {
     // ✅ 전체 시간표 불러오기 (학년 + 주차 범위)
     async loadAllTimetables(grade = "all", weekStart, weekEnd) {
       try {
-        const res = await axios.get(`${baseURL}/timetables`, {
+        const res = await axios.get(`${baseURL}/api/timetables`, {
           params: {
             grade,
             week_start: weekStart,

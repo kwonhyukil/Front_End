@@ -1,4 +1,4 @@
-<!-- [경로: frontend/src/components/calendar/CalendarEventView.vue] -->
+<!-- [경로: frontend/src/components/calendar/CalendarEventView.vue]
 <template>
   <div class="calendar-event-view">
     <h2>📅 학과 행사 & 공휴일</h2>
@@ -248,4 +248,4 @@ onMounted(() => {
   background-color: #f9f9f9;
   cursor: default;
 }
-</style>
+</style> -->

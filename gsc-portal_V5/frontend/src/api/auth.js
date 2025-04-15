@@ -6,7 +6,7 @@ const baseURL = "http://localhost:8080";
 // 로그아웃
 export const logout = async () => {
   try {
-    const response = await axios.get(`${baseURL}/auth/logout`, {
+    const response = await axios.get(`${baseURL}/api/auth/logout`, {
       withCredentials: true,
     });
     return response.data;
