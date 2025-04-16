@@ -1,8 +1,12 @@
 import express from "express";
-import googleCalendarController from "../controllers/googleCalendarController.js";
+
+console.log("✅ calendarRoutes.js 라우트 파일 로딩됨");
 
 const router = express.Router();
 
-router.get("/google/callback", googleCalendarController.getCalendarEvents);
+router.get("/events", (req, res) => {
+  console.log("📆 /calendar/events 호출됨");
+  res.json({ message: "캘린더 라우트 OK!" });
+});
 
 export default router;
