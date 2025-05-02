@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Tree Sibling</title>
+</head>
+<body>
+    
+    <h1 id="start-point">hello</h1>
+    <p>world</p>
+    <span>안녕</span>
+    <script>
+    // h1 요소 노드 선택
+    const h1 = document.getElementById('start-point')
+
+    // h1의 다음 형제 노드 (줄바꿈 텍스트 노드)
+    consol.log(h1.nextSibling.nodeName) // #text
+
+    </script>
+</body>
+</html>
