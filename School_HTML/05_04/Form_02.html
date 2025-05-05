@@ -7,19 +7,25 @@
 </head>
 <body>
     <form action="https://gsc.yju.ac.kr" method="GET">
-        <label for="username">사용자 이름(text)</label><br>
-        <input type="text" id="username" name="username" placeholder="이름을 입력하세요"><br>
-        <label for="password">비밀번호(password)</label><br>
-        <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요"><br>
-        <label for="gender">성별(radio)</label>
-        <div>
-            <input type="radio" id="gender1" name="gender" value="Man" />
-            <label for="gender1">남성</label>
+        <div class="form-group">>
+            <label for="username">사용자 이름(text)</label><br>
+            <input type="text" id="username" name="username" placeholder="이름을 입력하세요"><br>
+        </div>
 
+        <div class="form-group">
+            <label for="password">비밀번호(password)</label><br>
+            <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요"><br>
+        </div>
+
+        <div>
+            <label for="gender">성별(radio)</label>
+            <input type="radio" id="gender1" name="gender" value="Man" checked/>
+            <label for="gender1">남성</label>
             <input type="radio" id="gender2" name="gender" value="Woman" />
             <label for="gender2">여성</label>
         </div>
-        <div>
+        
+        <div class="form-group">
             <label for="interest">관심사(checkbox)</label><br>
             <input type="checkbox" id="interest1" name="interest" value="sports" />
             <label for="interest1">스포츠</label>
@@ -28,7 +34,8 @@
             <input type="checkbox" id="interest3" name="interest" value="travel" />
             <label for="interest3">여행</label>
         </div>
-        <div>
+        
+        <div class="form-group">
             <span>국가 선택(select)</span><br>
             <select name="country" id="country">
                 <option value="korea">대한민국</option>
@@ -37,12 +44,17 @@
                 <option value="china">중국</option>
             </select>
         </div>
-        <div>
+        
+        <div class="form-group">
             <span>메시지 (textarea)</span><br>
             <textarea name="message" id="message" cols="30" rows="10" placeholder="메시지를 입력하세요"></textarea>
         </div>
-        <button type="submit">제출</button>
-        <button type="reset">초기화</button>
+        
+        <div class="form-group">
+            <button type="submit">제출</button>
+            <button type="reset">초기화</button>
+        </div>
+        
     </form>
 
     

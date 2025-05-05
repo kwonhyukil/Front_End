@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <form action="http://localhost:8888/Form_03_PHP.php" method="GET">
+        <div class="form-group">
+            <label for="email">이메일(email)</label><br>
+            <input type="email" id="email" name="email" placeholder="example@domain.com">
+        </div>
+        <div class ="form-group">
+            <label for="url">홈페이지 주소(url)</label><br>
+            <input type="url" id="url" name="url" placeholder="https://example.com">
+        </div>
+        <div class="form-group">
+            <label for="tel">전화번호 (tel)</label><br>
+            <input type="tel" id="tel" name="tel" placeholder="010-1234-5678">
+        </div>
+        <div class="form-group">
+            <label form="search">검색어(serch)</label><br>
+            <input type="search" id="search" name="search" placeholder="검색어를 입력하세요">
+        </div>
+        <div class="form-group">
+            <label for="range">범위 슬라이더(range)</label><br>
+            <input type="range" id="range" name="range" min="0" max="100" value="50" step="1">
+        </div>
+        <div class="form-group">
+            <label for="number">숫자 입력(number)</label><br>
+            <input type="number" id="number" name="number" placeholder="숫자를 입력하세요">
+        </div>
+        <div class="form-group">
+            <label for="date">날짜 선택(date)</label><br>
+            <input type="date" id="date" name="date" placeholder="연도-월-일">
+        </div>
+        <div class="form-group">
+            <label for="time">시간 선택(time)</label><br>
+            <input type="time" id="time" name="time" placeholder="-- --:--">
+        </div>
+        <div class="form-group">
+            <label for="datetime-local">날짜 + 시간 (datetime-local)</label><br>
+            <input type="datetime-local" id="datetime-local" name="datetime-local" placeholder="연도-월-일 -- --:--">
+        </div>
+        <div class="form-group">
+            <label for="month">월 선택(month)</label><br>
+            <input type="month" id="month" name="month" placeholder="----년--월">
+        </div>
+        <div class="form-group">
+            <label for="week">주 선택(week)</label><br>
+            <input type="week" id="week" name="week" placeholder="----.--번째 주">
+        </div>
+        <div class="form-group">
+            <label for="color">색상 선택(color)</label><br>
+            <input type="color" id="color" name="color" placeholder="색상을 선택하세요">
+        </div>
+        <button type="submit">제출</button>
+    </form>
+</body>
+</html>
