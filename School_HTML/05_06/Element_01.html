@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DOM Tree</title>
+</head>
+<body>
+    <h1>Hello</h1>
+    <p>World</p>
+
+    <script>
+        // 루트 노드: <html>
+        const rootNode = document.documentElement;
+
+        console.log("Root node name: ", rootNode.nodeName); // HTML
+        console.log("Root node type: ", rootNode.nodeType); // 1: Element Node, 3: Text, 8: Comment
+        console.log("Root node child nodes: ", rootNode.childNodes); // Nodelist
+
+        // <body> 노드
+        const bodyNode = document.body;
+        console.log("Body의 부모 노드: ", bodyNode.parentNode.nodeName); // HTML
+
+        // 부모-자식 관계 비교
+        if (rootNode === bodyNode.parentNode) {
+            console.log("Body의 부모는 rootNode(HTML)입니다.");
+        } else {
+            console.log("다른 노드입니다.")
+        }
+
+    </script>
+    
+</body>
+</html>
