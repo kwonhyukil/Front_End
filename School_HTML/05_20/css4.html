@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Document</title>
+    <link rel="stylesheet" href="https://necolas.github.io/normalize.css/latest/normalize.css">
+    <style>
+        html { font-size: 10px}
+
+        .container .item {
+            text-align: center;
+            width: 100px;
+            height: 50px;
+            background-color: antiquewhite;
+            border: 0.5px dashed red
+        }
+
+        .container .item:hover {
+            font-size: 20px;
+            color: blue;
+            background-color: red;
+        }
+
+        .password:focus {
+            background-color: fuchsia;
+            text-decoration-line: line-through;
+        }
+
+        .container {
+            justify-content: center;
+            width: 200px;
+            /* flex-direction: column; */
+            display: flex;
+            background-color: bisque;
+        }
+
+        .container .item {
+
+            margin: 5px;
+            width: 50px;
+            height: 50px;
+            background-color: aqua;
+            border: 0.5px dashed black;
+            
+        }
+    </style>
+</head>
+<body>
+    <h1>Hello World</h1>
+    <input type="text" class="password">
+    <div class="container">
+        <div id="test" class="item">1</div>
+        <div class="item">2</div>
+        <div class="item">3</div>
+    </div>
+</body>
+</html>

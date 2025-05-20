@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Document</title>
+    <link rel="stylesheet" href="./my_style.css">
+    <style>
+        /* 선택자 {
+        각 요소에 스타일을 적용 -> 어떤 요소에 적용할 건지 선택자가 필요하다.
+        속성과 값이 필요하다. -> 하나의 속성의 집합
+            속성(Propery) : 값 (valeu)
+            속성(Propery) : 값 (valeu)
+            속성(Propery) : 값 (valeu)
+            ...
+        } */
+
+        .item{
+            width: 50px;
+            height: 50px;
+            border: 0.5px dashed;
+            background-color: aqua;
+            font-size: 30px;
+        }
+        .contrainer {
+            max-width: 300px;
+            background-color: blue;
+
+        }
+        #test {
+            width: 50px;
+            height: 50px;
+            background-color: red;
+        }
+        h1 {
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Hello World</h1>
+    <div class="contrainer">
+        <div class="item" id="test">1</div>
+        <div class="item">2</div>
+        <div class="item">3</div>
+    </div>
+</body>
+</html>
