@@ -1,0 +1,8 @@
+# 📦 npm 패키지 디렉토리
+node_modules/
+
+# 🏗️ Parcel 빌드 결과물
+dist/
+.parcel-cache/
+
+* text=auto
