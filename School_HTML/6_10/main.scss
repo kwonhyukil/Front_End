@@ -1,0 +1,25 @@
+/* main.scss */
+
+// 바닐라 CSS로 작성
+// .card_container {
+//     border: blue 0.5px dashed;
+// }
+// .card_container .card {
+//     width: 100px;
+//     height: 200px;
+//     background-color: black;
+// }
+
+
+// scss로 작성 ( 중첩 )
+.main_container{
+    border: 20px yellow solid;
+    .card_container {
+        border: blue 0.5px dashed;
+        .card {
+            width: 100px;
+            height: 200px;
+            background-color: black;
+        }
+    }
+}
