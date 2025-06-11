@@ -10,16 +10,77 @@
 //     background-color: black;
 // }
 
+// // 변수 선언
+// $card-background-color: yellow;
 
-// scss로 작성 ( 중첩 )
-.main_container{
-    border: 20px yellow solid;
-    .card_container {
-        border: blue 0.5px dashed;
-        .card {
-            width: 100px;
-            height: 200px;
-            background-color: black;
+
+// @mixin align-center() {
+//     display: flex;
+//     justify-content: center;
+//     align-items: center;
+//     @content;
+// }
+
+// @mixin my-border($bd-color: black) {
+//     border-color: $bd-color;
+//     border-style: solid;
+//     border-width: 20px;
+// }
+
+
+// // scss로 작성 ( 중첩 )
+// .main_container{
+//     // border: 20px red solid;
+
+//     @include my-border(green);
+//     // border-color: red;
+//     // border-style: solid;
+//     // border-width: 20px;
+    
+//     .card_container {
+//         border : { 
+//             color : black;
+//             width : 2px;
+//             style : dashed;
+//         }
+//         .card {
+//             @include align-center() {
+//                 font-size: 40px;
+//             };
+//             width: 100px;
+//             height: 100px;
+//             background-color: $card-background-color;
+//             border: 2px solid black;
+            
+//         }
+//     }
+// }
+
+// .img_container {
+//     @include my-border();
+
+//     .img {
+        
+//         width: 50px;
+//         height: 50px;
+//         background-color: aqua;
+//     }
+// }
+
+$card-background-color: yellow;
+
+.card_container {
+  @for $i from 1 through 5 {
+    .card:nth-child(#{$i}) {
+        @if $i % 2 == 0{
+            background-color: $card-background-color;
+        } @else {
+            background-color: aqua;
         }
+      width: 100px * $i;
+      height: 100px * $i;
+      border: 2px solid black;
+      font-size: 40px * $i;
     }
+  }
 }
