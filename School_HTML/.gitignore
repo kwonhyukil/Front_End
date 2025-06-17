@@ -1,0 +1,14 @@
+# 빌드/캐시 폴더 무시
+node_modules/
+.parcel-cache/
+dist/
+
+# 운영체제 별
+.DS_Store
+Thumbs.db
+
+# 기타
+*.log
+
+.vscode/
+.idea/

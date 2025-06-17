@@ -1,0 +1,66 @@
+.hearder {
+    text-align: center;
+    font-size: 2rem;
+    margin: 20px 0;
+}
+
+.card-box {
+    max-width: 800px;
+
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+
+    border: 1px solid black;
+    margin: 0 auto;
+
+    .card-container {
+        width: 100px;
+        height: 150px;
+        
+        .card {
+            width: 100%;
+            height: 100%;
+            border: 1px solid red;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            // transition: border 1s ease-in-out, width 1s ease-in-out;
+            transition: transform 2s;
+            position: relative;
+            z-index: 0;
+        };
+        .card:hover {
+          // border: 100px solid blue;
+          // transform: scale(3) skew(30deg) rotate(360deg);
+          transform: scale(1.5);
+          z-index: 10;
+        }
+    }
+}
+
+$path: "./cards/";
+$profix: "cardDiamonds";
+
+@for $i from 1 through 13 {
+  $lable: $i;
+
+  @if $i == 1 {
+    $lable: "A";
+  } @else if $i == 11 {
+    $lable: "J";
+  } @else if $i == 12 {
+    $lable: "Q";
+  } @else if $i == 13 {
+    $lable: "K";
+  }
+
+  .card-box .card-container:nth-child(#{$i}) .card {
+    background-image: url("#{$path}#{$profix}#{$lable}.png");
+  }
+}
+
+// .card-box .card-container:nth-child(2) .card {
+//     background-image: url('./cards/cardDiamonds2.png');
+// }

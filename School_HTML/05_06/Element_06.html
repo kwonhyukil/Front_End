@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>DOM Collection</title>
+</head>
+<body>
+    <ul>
+        <li>Apple</li>
+        <li>Banana</li>
+    </ul>
+
+    <script>
+        const htmlCollection = document.getElementsByTagName("li"); // HTMLCollection
+        const nodeList = document.querySelectorAll("li"); // NodeList
+
+        console.log("HTMLCollection: ", htmlCollection); // HTMLCollection(2) [li, li]
+        console.log("NodeList: ", nodeList); // NodeList(2) [li, li]
+
+        // 반복
+        for (let item of htmlCollection) {
+            console.log(item.textContent); // Apple, Banana
+        }
+
+        nodeList.forEach(node => console.log(node.textContent)); // Apple, Banana
+    </script>
+    
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>DOM HTML Element</title>
+</head>
+<body>
+    <h1>Hello</h1>
+    <p>World</p>
+    <ul id="To-do-list">
+        <li>ML 복습</li>
+        <li>Java 복습</li>
+        <li>HTML 복습</li>
+    </ul>
+
+    <script>
+        // body 내 하위 요소 탐색
+        const body = document.body; // <body> 요소 노드 선택
+        const elements = body.children; // <body>의 자식 요소 노드들
+
+        console.log("body.children: ");
+        console.log(elements);
+        
+        for (let index = 0; index < elements.length; index++) {
+            console.log(`요소 ${index + 1}:`, elements[index].nodeName); // 요소 노드 이름 출력
+        }
+
+        // to-do-list 항목 출력
+        const ul = document.getElementById("To-do-list");
+        const listItems = ul.children; // <ul>의 자식 요소 노드들
+
+        console.log("to-do-list 항목: ");
+        for (let li of listItems) {
+            console.log("- ", li.textContent.trim());
+        }
+    </script>
+
+</body>
+</html>

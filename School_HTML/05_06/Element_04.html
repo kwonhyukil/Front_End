@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Document</title>
+</head>
+<body>
+    <div id="content-box">
+        <p style="display: none;">이 문장은 보이지 않습니다.</p>
+        <strong>강조된 텍스트</strong>
+    </div>
+
+    <script>
+        const box = document.getElementById("content-box");
+
+        // 1. textContent: 모든 텍스트를 가져옴 (숨김 포함, HTML 해석 X)
+        console.log("textContent: ", box.textContent);
+        // 출력: 숨겨진 텍스트 강조된 텍스트
+
+        // 2. innerText: 눈에 보이는 텍스트만 가져옴 (렌더링 기준)
+        console.log("innerTest: ", box.innerText);
+        // 출력: 강조된 텍스트 (숨겨진 텍스트 제외)
+
+        // 3. innerHTML: HTML 태그를 포함한 전체 내용 문자열로 반환
+        console.log("innerHTML: ", box.innerHTML);
+        // 출력: <p style="display: none;">이 문장은 보이지 않습니다.</p><strong>강조된 텍스트</strong>
+    </script>
+    
+</body>
+</html>
