@@ -1,4 +1,60 @@
-.card-box-diamonds {
+$header-height: 80px;
+
+header {
+  width: 100%;
+  background-color: aquamarine;
+  height: $header-height;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  ul {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+
+    li {
+      margin: 0 20px;
+      a {
+        color: navy;
+        text-decoration: none;
+      }
+      &:hover {
+        background-color: black;
+      }
+    }
+  }
+}
+
+footer {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  background-color: antiquewhite;
+  width: 100%;
+  height: 60px;
+  z-index: 10000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  .logo {
+    flex: 1 1 150px;
+    border: black 0.5px dashed;
+    img{
+      height: 100%;
+      max-width: 100%;
+     }
+  } 
+  .contact-info{
+    flex: 3 1 150px;
+  }
+}
+
+.card-box {
     max-width: 800px;
     display: flex;
     flex-wrap: wrap;
